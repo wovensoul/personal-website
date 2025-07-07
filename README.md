@@ -1,6 +1,6 @@
 # personal-website
 
-## [jeffreychen.works](https://jeffreychen.works)
+## [jeffreychen.work](https://jeffreychen.work)
 
 A responsive, themeable personal website built with **Vue 3**, **TypeScript**, and **Tailwind CSS**. Includes project showcases, resume, and a fun snow animation toggle. Designed to be minimal, interactive, and easy to expand.
 
