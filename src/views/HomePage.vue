@@ -68,6 +68,8 @@ const pupilImages = [pupilIcon, tree1, tree3, leaves2, leaves, pupilWord]
     :project-name="'personal website'"
     :description="'you are here'"
     :stack="'vue, tailwindcss, html, typescript'"
+    :demo="'https://jeffreychen.work'"
+    :repo="'https://github.com/wovensoul/personal-website'"
   ></ProjectCard>
   <h1 class="uppercase pt-12 pb-4 text-[var(--myblue)] font-semibold">Technical Skills</h1>
   <div class="bg-[var(--obgcolor)] rounded-3xl">
