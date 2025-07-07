@@ -14,10 +14,10 @@
   </p>
   <p class="mt-3">
     i still have plenty to learn, and i’m always open to connect and chat about tech, projects, or
-    whatever’s trending! Heels, nails, blade, mascara (bonus points if you get the reference)!
+    whatever’s trending! heels, nails, blade, mascara (bonus points if you get the reference)!
   </p>
   <p class="mt-3">
-    When I'm not coding, I love listening to kpop, ice skating and enjoy trying new foods around the
+    when i'm not coding, i love listening to kpop, ice skating and enjoy trying new foods around the
     city!
   </p>
 </template>
