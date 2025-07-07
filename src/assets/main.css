@@ -1,0 +1,13 @@
+@import 'tailwindcss';
+@import './colors.css';
+/* @import './base.css'; */
+
+body {
+  font-size: 16px;
+  font-family: 'Lato', sans-serif;
+}
+
+a:active {
+  color: color-mix(in srgb, var(--highlightcolor) 90%, var(--textcolor) 10%);
+  transition: color 0.3s ease;
+}
