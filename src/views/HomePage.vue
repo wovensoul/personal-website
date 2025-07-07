@@ -31,7 +31,7 @@ const pupilImages = [pupilIcon, tree1, tree3, leaves2, leaves, pupilWord]
         text: 'pupil',
         link: 'https://getpupil.com',
       }"
-      :sub-text="'oct 2023 - present'"
+      :sub-text="'oct 2023 - june 2025'"
       :images="pupilImages"
     />
     <FlashCard
