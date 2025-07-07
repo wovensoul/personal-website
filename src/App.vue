@@ -36,10 +36,10 @@ onMounted(() => {
               toggle snow {{ showSnow ? 'off' : 'on' }}
             </button>
             <div class="flex space-x-1 mt-1">
-              <a href="https://github.com/wovensoul/"
+              <a href="https://github.com/wovensoul/" aria-label="GitHub Profile"
                 ><i class="fa-brands fa-square-github fa-2x"></i
               ></a>
-              <a href="https://www.linkedin.com/in/jffrychn"
+              <a href="https://www.linkedin.com/in/jffrychn" aria-label="LinkedIn Profile"
                 ><i class="fab fa-linkedin fa-2x"></i
               ></a>
             </div>
