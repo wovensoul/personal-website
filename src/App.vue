@@ -36,12 +36,16 @@ onMounted(() => {
               toggle snow {{ showSnow ? 'off' : 'on' }}
             </button>
             <div class="flex space-x-1 mt-1">
-              <a href="https://github.com/wovensoul/" aria-label="GitHub Profile"
-                ><i class="fa-brands fa-square-github fa-2x"></i
-              ></a>
-              <a href="https://www.linkedin.com/in/jffrychn" aria-label="LinkedIn Profile"
-                ><i class="fab fa-linkedin fa-2x"></i
-              ></a>
+              <span>
+                <a href="https://github.com/wovensoul/" aria-label="GitHub Profile"
+                  ><i class="fa-brands fa-square-github fa-2x"></i
+                ></a>
+              </span>
+              <span>
+                <a href="https://www.linkedin.com/in/jffrychn" aria-label="LinkedIn Profile"
+                  ><i class="fab fa-linkedin fa-2x"></i
+                ></a>
+              </span>
             </div>
           </div>
           <div id="right" class="text-right flex flex-col justify-self-end">
@@ -55,6 +59,9 @@ onMounted(() => {
 </template>
 
 <style scoped>
+span:after {
+  opacity: 0;
+}
 button {
   position: relative;
   text-decoration: none;

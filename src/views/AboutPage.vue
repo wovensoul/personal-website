@@ -1,5 +1,5 @@
 <template>
-  <p class="mt-5">
+  <p class="mt-10">
     hello! my name is jeffrey but you can call me jeff! for the last two years i was a software
     engineer at a startup called Pupil, where we connect underrepresented students with mentors to
     help them thrive.
