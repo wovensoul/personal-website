@@ -6,7 +6,7 @@
     <span><a href="https://www.linkedin.com/in/jffrychn/">LinkedIn!</a></span>
   </p>
 
-  <p v-if="copied">email copied to clipboard!</p>
+  <p v-if="copied" class="text-[var(--myblue)]">email copied to clipboard!</p>
 </template>
 
 <script setup lang="ts">

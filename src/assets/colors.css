@@ -4,7 +4,7 @@
   --bgcolor: #ffffff;
   --obgcolor: #e2e2e2;
   --textcolor: #111111;
-  --hue: 240 /* --obgcolor: #cae4cd; */;
+  --hue: 240;
   --darkness: 0%;
   --light-70: calc(70% - var(--darkness));
   --light-77: calc(77% - var(--darkness));

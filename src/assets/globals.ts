@@ -35,4 +35,6 @@ export const technologies = [
   { name: 'Visual Studio Code', icon: 'devicon-vscode-plain colored' },
   //   { name: 'Android Studio', icon: null },
   { name: 'Figma', icon: 'devicon-figma-plain colored' },
+  { name: 'Docker', icon: 'devicon-docker-plain colored' },
+  { name: 'Kubernetes', icon: 'devicon-kubernetes-plain colored' },
 ]
