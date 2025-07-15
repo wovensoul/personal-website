@@ -35,9 +35,7 @@ onMounted(() => {
       <router-link to="/contact"><span>contact</span></router-link>
     </li>
     <li class="resume font-bold">
-      <a href="/resume.pdf"
-        ><span>resume <i class="fa-solid fa-file-lines pl-1"></i></span
-      ></a>
+      <a href="/resume.pdf"><span>resume</span> <i class="fa-solid fa-file-lines pl-1"></i></a>
     </li>
 
     <li>

@@ -37,4 +37,7 @@ export const technologies = [
   { name: 'Figma', icon: 'devicon-figma-plain colored' },
   { name: 'Docker', icon: 'devicon-docker-plain colored' },
   { name: 'Kubernetes', icon: 'devicon-kubernetes-plain colored' },
+  { name: 'Vercel', icon: 'devicon-vercel-original colored' },
+  { name: 'Cloudflare', icon: 'devicon-cloudflare-plain colored' },
+  { name: 'Firebase', icon: 'devicon-firebase-plain colored' },
 ]

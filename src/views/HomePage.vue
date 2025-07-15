@@ -56,7 +56,7 @@ const pupilImages = [pupilIcon, tree1, tree3, leaves2, leaves, pupilWord]
   <ProjectCard
     :project-name="'matcha generator'"
     :description="'an ai-powered web app that generates matcha recipies'"
-    :stack="'next.js, react, tsx, docker'"
+    :stack="'next.js, react.js, tsx, docker'"
     :demo="'https://matcha-generator.vercel.app'"
     :repo="'https://github.com/wovensoul/matcha-generator'"
   ></ProjectCard>
@@ -69,7 +69,7 @@ const pupilImages = [pupilIcon, tree1, tree3, leaves2, leaves, pupilWord]
   <ProjectCard
     :project-name="'personal blog'"
     :description="'a blog implementing headless cms with automatic builds and deploys'"
-    :stack="'vue, strapi'"
+    :stack="'vue, strapi, render'"
   ></ProjectCard>
   <ProjectCard
     :project-name="'personal website'"
