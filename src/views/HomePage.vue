@@ -54,6 +54,12 @@ const pupilImages = [pupilIcon, tree1, tree3, leaves2, leaves, pupilWord]
   </p>
   <h1 class="uppercase pt-12 pb-4 text-[var(--myblue)] font-semibold">Projects</h1>
   <ProjectCard
+    :project-name="'sales analytics'"
+    :description="'rest api to manage and analyze sales'"
+    :stack="'java, spring boot, spring jpa, hibernate, maven'"
+    :repo="'https://github.com/wovensoul/sales-analytics'"
+  ></ProjectCard>
+  <ProjectCard
     :project-name="'matcha generator'"
     :description="'an ai-powered web app that generates matcha recipies'"
     :stack="'next.js, react.js, tsx, docker'"
