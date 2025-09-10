@@ -2,6 +2,18 @@
  * Performance monitoring and optimization utilities
  */
 
+// Network Information API interface
+interface NetworkInformation {
+  effectiveType?: string
+  downlink?: number
+  rtt?: number
+  saveData?: boolean
+}
+
+interface NavigatorWithConnection extends Navigator {
+  connection?: NetworkInformation
+}
+
 // Core Web Vitals monitoring
 export function initPerformanceMonitoring() {
   if (typeof window === 'undefined') return
@@ -160,10 +172,19 @@ export function analyzeBundleSize() {
 }
 
 // Memory usage monitoring
+interface PerformanceMemory {
+  jsHeapSizeLimit: number
+  totalJSHeapSize: number
+  usedJSHeapSize: number
+}
+
 export function monitorMemoryUsage() {
+  // Type guard to check if memory exists on performance
   if (!('memory' in performance)) return
 
-  const memory = (performance as any).memory
+  const memory = (performance as Performance & { memory?: PerformanceMemory }).memory
+
+  if (!memory) return
 
   console.log('Memory Usage:', {
     used: formatBytes(memory.usedJSHeapSize),
@@ -177,7 +198,7 @@ export function getNetworkInfo() {
   if (!('connection' in navigator)) return null
 
   // Type assertion for Network Information API
-  const nav = navigator as unknown
+  const nav = navigator as NavigatorWithConnection
   const connection = nav.connection
 
   return {
