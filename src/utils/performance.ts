@@ -176,13 +176,15 @@ export function monitorMemoryUsage() {
 export function getNetworkInfo() {
   if (!('connection' in navigator)) return null
 
-  const connection = (navigator as unknown).connection
+  // Type assertion for Network Information API
+  const nav = navigator as unknown
+  const connection = nav.connection
 
   return {
-    effectiveType: connection.effectiveType,
-    downlink: connection.downlink,
-    rtt: connection.rtt,
-    saveData: connection.saveData,
+    effectiveType: connection?.effectiveType,
+    downlink: connection?.downlink,
+    rtt: connection?.rtt,
+    saveData: connection?.saveData,
   }
 }
 
