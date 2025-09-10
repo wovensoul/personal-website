@@ -144,7 +144,7 @@ onMounted(() => {
                 </button>
                 <div
                   v-if="emailCopied"
-                  class="absolute top-full left-0 mt-2 text-sm text-[var(--myblue)] animate-fade-in font-medium"
+                  class="absolute top-full left-0 mt-0 text-sm text-[var(--myblue)] animate-fade-in font-medium"
                   role="status"
                   aria-live="polite"
                 >

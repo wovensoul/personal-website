@@ -9,30 +9,30 @@ const aboutRef = ref<HTMLElement>()
 
 // Technology data organized by categories
 const languages = [
-  { name: 'JavaScript', icon: 'devicon-javascript-plain' },
-  { name: 'TypeScript', icon: 'devicon-typescript-plain' },
-  { name: 'Python', icon: 'devicon-python-plain' },
-  { name: 'Java', icon: 'devicon-java-plain' },
-  { name: 'Swift', icon: 'devicon-swift-plain' },
-  { name: 'Kotlin', icon: 'devicon-kotlin-plain' },
+  { name: 'JavaScript', icon: 'devicon-javascript-plain colored' },
+  { name: 'TypeScript', icon: 'devicon-typescript-plain colored' },
+  { name: 'Python', icon: 'devicon-python-plain colored' },
+  { name: 'Java', icon: 'devicon-java-plain colored' },
+  { name: 'HTML', icon: 'devicon-html5-plain colored' },
+  { name: 'CSS', icon: 'devicon-css3-plain colored' },
 ]
 
 const frameworks = [
-  { name: 'Vue.js', icon: 'devicon-vuejs-plain' },
-  { name: 'React', icon: 'devicon-react-original' },
-  { name: 'Node.js', icon: 'devicon-nodejs-plain' },
-  { name: 'Express', icon: 'devicon-express-original' },
-  { name: 'Django', icon: 'devicon-django-plain' },
+  { name: 'Vue', icon: 'devicon-vuejs-plain colored' },
+  { name: 'Svelte', icon: 'devicon-svelte-plain colored' },
+  { name: 'React Native', icon: 'devicon-react-original colored' },
+  { name: 'Flutter', icon: 'devicon-flutter-plain colored' },
+  { name: 'Node.js', icon: 'devicon-nodejs-plain colored' },
   { name: 'Spring Boot', icon: 'devicon-spring-plain' },
 ]
 
 const tools = [
-  { name: 'Git', icon: 'devicon-git-plain' },
-  { name: 'Docker', icon: 'devicon-docker-plain' },
-  { name: 'PostgreSQL', icon: 'devicon-postgresql-plain' },
+  { name: 'Git', icon: 'devicon-git-plain colored' },
+  { name: 'Cloudflare', icon: 'devicon-cloudflare-plain colored' },
   { name: 'MongoDB', icon: 'devicon-mongodb-plain' },
-  { name: 'AWS', icon: 'devicon-amazonwebservices-plain-wordmark' },
-  { name: 'Figma', icon: 'devicon-figma-plain' },
+  { name: 'VS Code', icon: 'devicon-vscode-plain colored' },
+  { name: 'Docker', icon: 'devicon-docker-plain colored' },
+  { name: 'Kubernetes', icon: 'devicon-kubernetes-plain colored' },
 ]
 
 // Intersection Observer for animations
