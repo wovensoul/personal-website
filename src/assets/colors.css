@@ -1,9 +1,122 @@
 :root {
-  --myblue: #75a6bb;
-  --mygray: #888888;
-  --bgcolor: #ffffff;
-  --obgcolor: #e2e2e2;
-  --textcolor: #111111;
+  /* ===== ENHANCED COLOR SYSTEM ===== */
+
+  /* Primary Brand Colors */
+  --primary-50: #f0f9ff;
+  --primary-100: #e0f2fe;
+  --primary-200: #bae6fd;
+  --primary-300: #7dd3fc;
+  --primary-400: #38bdf8;
+  --primary-500: #4a90a4; /* Main brand color */
+  --primary-600: #3d7a8c;
+  --primary-700: #336575;
+  --primary-800: #2a525e;
+  --primary-900: #1e3a42;
+  --primary-950: #0f1d21;
+
+  /* Neutral Gray Scale */
+  --neutral-50: #fafafa;
+  --neutral-100: #f5f5f5;
+  --neutral-200: #e5e5e5;
+  --neutral-300: #d4d4d4;
+  --neutral-400: #a3a3a3;
+  --neutral-500: #737373;
+  --neutral-600: #525252;
+  --neutral-700: #404040;
+  --neutral-800: #262626;
+  --neutral-900: #171717;
+  --neutral-950: #0a0a0a;
+
+  /* Semantic Colors */
+  --success-50: #f0fdf4;
+  --success-500: #22c55e;
+  --success-600: #16a34a;
+  --success-700: #15803d;
+
+  --warning-50: #fffbeb;
+  --warning-500: #f59e0b;
+  --warning-600: #d97706;
+  --warning-700: #b45309;
+
+  --error-50: #fef2f2;
+  --error-500: #ef4444;
+  --error-600: #dc2626;
+  --error-700: #b91c1c;
+
+  --info-50: #eff6ff;
+  --info-500: #3b82f6;
+  --info-600: #2563eb;
+  --info-700: #1d4ed8;
+
+  /* Legacy Color Mappings (for backward compatibility) */
+  --myblue: var(--primary-500);
+  --mygray: var(--neutral-600);
+  --bgcolor: var(--neutral-50);
+  --obgcolor: var(--neutral-100);
+  --textcolor: var(--neutral-900);
+  --bordercolor: var(--neutral-200);
+  --snowcolor: var(--primary-200);
+  --glowcolor: var(--primary-300);
+  --highlightcolor: var(--primary-400);
+
+  /* Semantic Token Mappings */
+  --text-primary: var(--neutral-900);
+  --text-secondary: var(--neutral-700);
+  --text-tertiary: var(--neutral-500);
+  --text-muted: var(--neutral-400);
+  --text-inverse: var(--neutral-50);
+
+  --surface-primary: var(--neutral-50);
+  --surface-secondary: var(--neutral-100);
+  --surface-tertiary: var(--neutral-200);
+  --surface-elevated: #ffffff;
+  --surface-overlay: rgba(255, 255, 255, 0.95);
+
+  --border-primary: var(--neutral-200);
+  --border-secondary: var(--neutral-300);
+  --border-focus: var(--primary-500);
+  --border-error: var(--error-500);
+
+  /* Interactive States */
+  --interactive-primary: var(--primary-500);
+  --interactive-primary-hover: var(--primary-600);
+  --interactive-primary-active: var(--primary-700);
+  --interactive-secondary: var(--neutral-600);
+  --interactive-secondary-hover: var(--neutral-700);
+  --interactive-secondary-active: var(--neutral-800);
+
+  /* Focus and Selection */
+  --focus-ring: 0 0 0 3px rgba(74, 144, 164, 0.2);
+  --focus-ring-offset: 2px;
+  --selection-bg: rgba(74, 144, 164, 0.2);
+  --selection-text: var(--text-primary);
+
+  /* Shadows and Elevation */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  /* Backdrop Effects */
+  --backdrop-blur-sm: blur(4px);
+  --backdrop-blur-md: blur(8px);
+  --backdrop-blur-lg: blur(16px);
+  --backdrop-saturate: saturate(180%);
+
+  /* Animation Durations */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+  --duration-slower: 500ms;
+
+  /* Animation Easings */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* Legacy Variables (maintained for compatibility) */
   --hue: 240;
   --darkness: 0%;
   --light-70: calc(70% - var(--darkness));
@@ -13,23 +126,123 @@
   --light-88: calc(88% - var(--darkness));
   --light-90: calc(90% - var(--darkness));
   --light-95: calc(95% - var(--darkness));
-  --bordercolor: #ffffff;
-  --snowcolor: #a2c3d3;
-  --glowcolor: #a2c3d3;
-  --highlightcolor: #a2c3d3;
+
+  /* Accessibility colors */
+  --focus-color: var(--primary-500);
+  --error-color: var(--error-600);
+  --success-color: var(--success-600);
+  --warning-color: var(--warning-600);
 }
 
 [data-theme='dark'] {
-  --bgcolor: #1d1d1d;
-  --obgcolor: #303030;
-  --textcolor: #f5f5f5;
-  --mygray: #969494;
+  /* ===== DARK THEME COLOR SYSTEM ===== */
+
+  /* Primary Brand Colors (Dark Theme) */
+  --primary-50: #0f1d21;
+  --primary-100: #1e3a42;
+  --primary-200: #2a525e;
+  --primary-300: #336575;
+  --primary-400: #3d7a8c;
+  --primary-500: #7bb3c7; /* Enhanced for dark theme */
+  --primary-600: #8bc1d4;
+  --primary-700: #9bcfe1;
+  --primary-800: #abdcee;
+  --primary-900: #bbeafb;
+  --primary-950: #f0f9ff;
+
+  /* Neutral Gray Scale (Dark Theme) */
+  --neutral-50: #0a0a0a;
+  --neutral-100: #171717;
+  --neutral-200: #262626;
+  --neutral-300: #404040;
+  --neutral-400: #525252;
+  --neutral-500: #737373;
+  --neutral-600: #a3a3a3;
+  --neutral-700: #d4d4d4;
+  --neutral-800: #e5e5e5;
+  --neutral-900: #f5f5f5;
+  --neutral-950: #fafafa;
+
+  /* Semantic Colors (Dark Theme) */
+  --success-50: #0f1d0f;
+  --success-500: #4ade80;
+  --success-600: #22c55e;
+  --success-700: #16a34a;
+
+  --warning-50: #1d1a0f;
+  --warning-500: #fbbf24;
+  --warning-600: #f59e0b;
+  --warning-700: #d97706;
+
+  --error-50: #1d0f0f;
+  --error-500: #f87171;
+  --error-600: #ef4444;
+  --error-700: #dc2626;
+
+  --info-50: #0f1419;
+  --info-500: #60a5fa;
+  --info-600: #3b82f6;
+  --info-700: #2563eb;
+
+  /* Legacy Color Mappings (Dark Theme) */
+  --myblue: var(--primary-500);
+  --mygray: var(--neutral-600);
+  --bgcolor: var(--neutral-100);
+  --obgcolor: var(--neutral-200);
+  --textcolor: var(--neutral-900);
+  --bordercolor: var(--neutral-700);
+  --snowcolor: var(--neutral-950);
+  --glowcolor: var(--primary-400);
+  --highlightcolor: var(--primary-500);
+
+  /* Semantic Token Mappings (Dark Theme) */
+  --text-primary: var(--neutral-900);
+  --text-secondary: var(--neutral-700);
+  --text-tertiary: var(--neutral-600);
+  --text-muted: var(--neutral-500);
+  --text-inverse: var(--neutral-100);
+
+  --surface-primary: var(--neutral-100);
+  --surface-secondary: var(--neutral-200);
+  --surface-tertiary: var(--neutral-300);
+  --surface-elevated: var(--neutral-50);
+  --surface-overlay: rgba(23, 23, 23, 0.95);
+
+  --border-primary: var(--neutral-300);
+  --border-secondary: var(--neutral-400);
+  --border-focus: var(--primary-500);
+  --border-error: var(--error-500);
+
+  /* Interactive States (Dark Theme) */
+  --interactive-primary: var(--primary-500);
+  --interactive-primary-hover: var(--primary-400);
+  --interactive-primary-active: var(--primary-300);
+  --interactive-secondary: var(--neutral-600);
+  --interactive-secondary-hover: var(--neutral-500);
+  --interactive-secondary-active: var(--neutral-400);
+
+  /* Focus and Selection (Dark Theme) */
+  --focus-ring: 0 0 0 3px rgba(123, 179, 199, 0.3);
+  --selection-bg: rgba(123, 179, 199, 0.3);
+  --selection-text: var(--text-primary);
+
+  /* Shadows and Elevation (Dark Theme) */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+
+  /* Legacy Variables (Dark Theme) */
   --holo1: rgba(0, 0, 0, 0.7);
   --holo2: #000000;
   --darkness: 15%;
-  --bordercolor: #c7c7c7;
-  --snowcolor: #ffffff;
-  --glowcolor: #a2c3d3;
+
+  /* Dark theme accessibility colors */
+  --focus-color: var(--primary-500);
+  --error-color: var(--error-500);
+  --success-color: var(--success-500);
+  --warning-color: var(--warning-500);
 }
 
 /* [data-theme='matcha'] {
