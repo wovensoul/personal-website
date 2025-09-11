@@ -125,16 +125,27 @@ onMounted(() => {
           <button
             @click="toggleTheme"
             @touchstart="toggleTheme"
-            class="mobile-toggle-btn"
+            class="mobile-toggle-btn inline-block text-center"
             :aria-label="`Switch to ${currentTheme === 'light' ? 'dark' : 'light'} mode`"
           >
             {{ currentTheme === 'light' ? '🌙 Dark' : '☀️ Light' }}
           </button>
         </div>
+        <div class="flex sm:hidden justify-center mt-4">
+          <a
+            href="/resume.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="mobile-toggle-btn"
+            aria-label="View or download Jeffrey's resume"
+          >
+            📄 Resume
+          </a>
+        </div>
 
         <!-- Mobile scroll hint -->
         <div class="flex sm:hidden justify-center mt-6">
-          <p class="text-sm text-[var(--mygray)] italic">Scroll down to explore the portfolio</p>
+          <p class="text-sm text-[var(--mygray)] italic">Scroll down to explore my portfolio</p>
         </div>
       </div>
     </div>
@@ -147,7 +158,6 @@ onMounted(() => {
   position: relative;
   z-index: 2;
 }
-
 .hero-gradient::before {
   content: '';
   position: fixed;
@@ -165,9 +175,7 @@ onMounted(() => {
   );
   z-index: -1;
   pointer-events: none;
-}
-
-/* Dark mode gradient */
+} /* Dark mode gradient */
 [data-theme='dark'] .hero-gradient::before {
   background: linear-gradient(
     135deg,
@@ -178,31 +186,22 @@ onMounted(() => {
     rgba(16, 185, 129, 0.08) 100%
   );
 }
-
 .hero-content {
   opacity: 0;
   transform: translateY(20px);
-  transition: all 0.8s ease-out;
+  transition: opacity 0.8s ease-out;
 }
-
 .animate-fade-in {
   opacity: 1;
   transform: translateY(0);
 }
-
-/* Button hover effects */
 button {
-  transition: all 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    background-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
 }
-
-button:hover {
-  transform: translateY(-2px);
-}
-
-button:active {
-  transform: translateY(0);
-}
-
 /* Mobile toggle buttons */
 .mobile-toggle-btn {
   padding: 16px 24px !important;
@@ -221,20 +220,16 @@ button:active {
   user-select: none !important;
   -webkit-user-select: none !important;
 }
-
 .mobile-toggle-btn:hover,
 .mobile-toggle-btn:active {
   background: var(--mygray) !important;
   color: white !important;
   transform: scale(0.98) !important;
-}
-
-/* Responsive adjustments */
+} /* Responsive adjustments */
 @media (max-width: 640px) {
   .hero-content {
     padding: 0 1rem;
   }
-
   button:not(.mobile-toggle-btn) {
     width: 100%;
     max-width: 300px;

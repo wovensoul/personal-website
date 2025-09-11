@@ -108,7 +108,7 @@ export function createPersonSchema(): PersonSchema {
     name: 'Jeffrey Chen',
     jobTitle: 'Software Engineer',
     description:
-      'Software Engineer & Creative Problem Solver building meaningful digital experiences with modern web technologies',
+      'Full Stack Software Engineer & AI Enthusiast building meaningful digital experiences with modern web technologies',
     url: 'https://jeffreychen.work',
     email: 'jeffrey@jeffreychen.work',
     image: 'https://jeffreychen.work/profile-image.jpg',
@@ -242,7 +242,7 @@ export function setupMainPageSEO(): void {
   injectStructuredData(createWebsiteSchema(), 'website-schema')
 
   // Update dynamic meta tags
-  updatePageTitle('Jeffrey Chen - Software Engineer & Creative Problem Solver')
+  updatePageTitle('Jeffrey Chen - Full Stack Software Engineer & AI Enthusiast')
   updatePageDescription(
     'Software Engineer building meaningful digital experiences with modern web technologies. Specializing in Vue.js, TypeScript, and full-stack development.',
   )

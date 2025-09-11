@@ -84,6 +84,7 @@ function loadImage() {
 
     isError.value = true
     console.warn(`Failed to load image: ${props.src}`)
+    // ✅ No removeChild needed here
   }
 
   img.src = props.src

@@ -17,7 +17,7 @@ const projects = ref<Project[]>([
     liveUrl: 'https://bluember.jeffreychen.work',
     image: 'https://via.placeholder.com/400x200/dc2626/ffffff?text=Blu+Ember+Restaurant',
     featured: true,
-    dateCreated: '2024-04-15',
+    dateCreated: '2025-08-02',
   },
   {
     id: 'sales-analytics',
@@ -29,7 +29,7 @@ const projects = ref<Project[]>([
     githubUrl: 'https://github.com/wovensoul/sales-analytics',
     image: 'https://via.placeholder.com/400x200/75a6bb/ffffff?text=Sales+Analytics',
     featured: true,
-    dateCreated: '2024-01-15',
+    dateCreated: '2025-07-26',
   },
   {
     id: 'matcha-generator',
@@ -37,12 +37,12 @@ const projects = ref<Project[]>([
     description: 'An AI-powered web app that generates personalized matcha recipes',
     longDescription:
       'Interactive web application that uses AI to create custom matcha recipes based on user preferences. Features include ingredient customization, brewing instructions, and recipe sharing.',
-    technologies: ['Next.js', 'React', 'TypeScript', 'Docker', 'OpenAI API'],
+    technologies: ['Next.js', 'React', 'TypeScript', 'Docker', `Llama 3.1`, 'Hugging Face'],
     liveUrl: 'https://matcha-generator.vercel.app',
     githubUrl: 'https://github.com/wovensoul/matcha-generator',
     image: 'https://via.placeholder.com/400x200/4ade80/ffffff?text=Matcha+Generator',
     featured: true,
-    dateCreated: '2024-03-10',
+    dateCreated: '2025-07-14',
   },
   {
     id: 'matchaluv',
@@ -54,7 +54,7 @@ const projects = ref<Project[]>([
     githubUrl: 'https://github.com/wovensoul/matchaluv',
     image: 'https://via.placeholder.com/400x200/22c55e/ffffff?text=MatchaLuv',
     featured: false,
-    dateCreated: '2023-11-20',
+    dateCreated: '2025-02-13',
   },
   {
     id: 'personal-blog',
@@ -65,7 +65,7 @@ const projects = ref<Project[]>([
     technologies: ['Vue.js', 'Strapi', 'Render', 'Markdown', 'REST API'],
     image: 'https://via.placeholder.com/400x200/888888/ffffff?text=Personal+Blog',
     featured: false,
-    dateCreated: '2023-08-05',
+    dateCreated: '2025-06-10',
   },
   {
     id: 'personal-website',
@@ -78,7 +78,7 @@ const projects = ref<Project[]>([
     githubUrl: 'https://github.com/wovensoul/personal-website',
     image: 'https://via.placeholder.com/400x200/3b82f6/ffffff?text=Portfolio+Website',
     featured: true,
-    dateCreated: '2024-02-01',
+    dateCreated: '2025-07-07',
   },
 ])
 

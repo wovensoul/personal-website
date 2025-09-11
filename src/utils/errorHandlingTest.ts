@@ -84,7 +84,9 @@ export class ErrorHandlingTest {
     img.onerror = () => {
       NetworkErrorHandler.handleImageError(img, '/fallback-image.jpg')
       console.log('✓ Image error handled correctly')
-      document.body.removeChild(img)
+      if (img.parentNode) {
+        document.body.removeChild(img)
+      }
     }
 
     // Trigger error with invalid image
