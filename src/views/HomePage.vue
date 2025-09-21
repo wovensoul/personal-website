@@ -31,7 +31,7 @@ const pupilImages = [pupilIcon, tree1, tree3, leaves2, leaves, pupilWord]
         text: 'pupil',
         link: 'https://getpupil.com',
       }"
-      :sub-text="'oct 2023 - june 2025'"
+      :sub-text="'oct 2023 - may 2024'"
       :images="pupilImages"
     />
     <FlashCard
@@ -53,6 +53,12 @@ const pupilImages = [pupilIcon, tree1, tree3, leaves2, leaves, pupilWord]
     Pupil in any official capacity.
   </p>
   <h1 class="uppercase pt-12 pb-4 text-[var(--myblue)] font-semibold">Projects</h1>
+  <ProjectCard
+    :project-name="'sales insights agent'"
+    :description="'multi-agent for data analytics and forecasts'"
+    :stack="'python, google adk, vertex gai, bigquery, bqml'"
+    :repo="'https://github.com/wovensoul/sales-insights-agent'"
+  ></ProjectCard>
   <ProjectCard
     :project-name="'sales analytics'"
     :description="'rest api to manage and analyze sales'"
