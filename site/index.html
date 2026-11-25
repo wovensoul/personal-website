@@ -67,7 +67,7 @@
 
   /* Content sits directly on the mesh; the triangles behind each .facet deepen into a crystal panel (drawn in the canvas). */
   section { padding-top: 56px; }
-  h2 { font-weight: 400; font-size: 14px; letter-spacing: .2em; margin: 0 0 18px; opacity: .85; }
+  h2 { font-weight: 700; text-transform: uppercase; font-size: 14px; letter-spacing: .2em; margin: 0 0 18px; opacity: .85; }
   .facet { padding: 26px 32px; }
   .facet.reveal { transition: opacity .7s ease-out, translate .7s ease-out, color .6s, text-shadow .6s; }
   /* Light mode with frosted panels: text on the panels goes deep indigo; the header and headings stay white. */
@@ -97,7 +97,7 @@
   .row .tags { grid-column: 1; font-size: 12px; opacity: .7; letter-spacing: .03em; }
   .prose p { margin: 0 0 14px; line-height: 1.7; opacity: .92; }
   .prose p:last-child { margin-bottom: 0; }
-  .row .actions { grid-row: 1; grid-column: 2; display: flex; gap: 14px; font-size: 14px; }
+  .row .actions { grid-row: 1; grid-column: 2; display: flex; gap: 14px; font-size: 14px; font-weight: 700; }
 
   /* Links to the site's other pages, plus the dark mode toggle. */
   #nav { position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: flex-end; align-items: center; gap: 26px; padding: 22px 32px; font-size: 14px; letter-spacing: .08em; text-shadow: var(--shadow); z-index: 1; }
@@ -150,19 +150,19 @@
 
   <div id="home-view">
   <section id="experience">
-    <h2 class="reveal">experience</h2>
+    <h2 class="reveal">Experience</h2>
     <div class="facet reveal"></div>
   </section>
 
   <section id="projects">
-    <h2 class="reveal">projects</h2>
+    <h2 class="reveal">Projects</h2>
     <div class="facet reveal"></div>
   </section>
   </div>
 
   <div id="about-view" hidden>
   <section>
-    <h2 class="reveal">about</h2>
+    <h2 class="reveal">About</h2>
     <div class="facet prose reveal">
       <p>hello! my name is jeffrey but you can call me jeff! i’ve been a software engineer at Garner Health for <span data-since="2026-02">~9 months</span>, where we help people find better care. i’ve had the awesome opportunity to contribute to our mission from a few different angles, from building member-facing features to the internal tools and infra that keep our business ops running.</p>
       <p>i’m soaking up as much as i can and getting exposure all across the company, and i’ve even started conducting interviews for entry-level candidates! between the work itself and some amazing mentorship, i’ve picked up (and really internalized) good agentic coding hygiene and workflows that keep accelerating my learning and growth as an engineer.</p>
@@ -547,11 +547,17 @@ function drawTriangle(t, progress, k = 0, lift = 0, hot = 0) {
   }
   if (lift > 0.005) {
     // Both themes frost the panel lighter: pale glass behind dark text in light mode, a soft lilac haze in dark mode.
-    // Per-facet variation keeps it crystalline.
+    // Per-facet variation keeps it crystalline. Hover (and the project stripes) light dark panels up further,
+    // but tint light ones a little darker, since more white barely shows on pale glass.
     const dark = theme === 'dark';
-    ctx.globalAlpha = Math.max(0, reveal * lift * (dark ? 0.1 + 0.14 * hot + t.tone * 0.05 : 0.42 + 0.14 * hot + t.tone * 0.14));
+    ctx.globalAlpha = Math.max(0, reveal * lift * (dark ? 0.1 + 0.14 * hot + t.tone * 0.05 : 0.42 + t.tone * 0.14));
     ctx.fillStyle = dark ? '#d8ccff' : '#ffffff';
     ctx.fill();
+    if (!dark && hot > 0.005) {
+      ctx.globalAlpha = reveal * lift * hot * 0.14;
+      ctx.fillStyle = '#2a1d6b';
+      ctx.fill();
+    }
   }
   const edge = Math.min(1, edgeAlpha + 0.35 * k + 0.3 * lift + 0.35 * hot);
   if (edge) {
@@ -1026,7 +1032,6 @@ let themeAnim = 0;
 function setTheme(next, animate = true) {
   theme = next;
   document.documentElement.dataset.theme = theme;
-  localStorage.setItem('theme', theme);
   $('theme').innerHTML = THEME_ICONS[theme === 'dark' ? 'light' : 'dark'];
   for (const [id, v] of Object.entries(THEME_LOOK[theme])) { $(id).value = v; $(id + 'V').textContent = v + '%'; }
   const from = ['c1', 'c2', 'c3'].map(id => hexToRgb($(id).value)), to = PALETTES[theme].map(hexToRgb);
@@ -1091,7 +1096,10 @@ $('emailLink').addEventListener('click', async e => {
 const markScrolled = () => $('nav').classList.toggle('scrolled', scrollY > 20);
 addEventListener('scroll', markScrolled, { passive: true });
 markScrolled();
-$('theme').onclick = () => setTheme(theme === 'dark' ? 'light' : 'dark');
+// Follows the system theme until the toggle is used; then the choice is remembered.
+const systemDark = matchMedia('(prefers-color-scheme: dark)');
+systemDark.addEventListener('change', e => { if (!localStorage.getItem('theme')) setTheme(e.matches ? 'dark' : 'light'); });
+$('theme').onclick = () => { setTheme(theme === 'dark' ? 'light' : 'dark'); localStorage.setItem('theme', theme); };
 setTheme(theme, false);
 </script>
 <div id="toast" role="status" aria-live="polite"></div>
