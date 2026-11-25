@@ -1,0 +1,1116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jeffrey chen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  html { background: #fff; scroll-behavior: smooth; scrollbar-gutter: stable; } /* tabs of different lengths don't shift the layout */
+  html.no-motion { scroll-behavior: auto; }
+  html, body { margin: 0; font: 300 16px/1.6 Lato, system-ui, sans-serif; color: #fff; }
+  /* Sized to the largest viewport (mobile address bar hidden) so it never needs to stretch or rebuild on scroll. */
+  #bg { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; height: 100lvh; display: block; z-index: -1; }
+  a { color: inherit; }
+  :root { --shadow: 0 1px 14px rgba(25, 12, 70, .35); }
+
+  main { max-width: 720px; margin: 0 auto; padding: 130px 24px 100px; text-shadow: var(--shadow); }
+  .hero { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 24px; }
+  /* Shape art: the Geometrize-style algorithm builds the picture out of triangles, live. */
+  .art-wrap { margin: 0; display: grid; gap: 8px; justify-items: center; }
+  /* Hidden until enough triangles have landed to read as a picture. */
+  .art-frame { position: relative; border-radius: 18px; overflow: hidden; box-shadow: 0 10px 40px rgba(20, 10, 60, .25); opacity: 0; transition: opacity .6s ease-out; }
+  .art-frame.shown { opacity: 1; }
+  .art { display: block; width: clamp(170px, 26vw, 250px); }
+  /* The original picture shows until enough triangles have landed, then fades into them.
+     Hovering plays the original GIF over the triangles once, then fades into triangles of its last frame. */
+  .art-base, .art-gif, .art-end { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .35s ease-out; pointer-events: none; }
+  .art-end { transition-duration: .5s; }
+  .art-base { transition-duration: .6s; }
+  .art-gif, .art-end { z-index: 3; }
+  .art-frame.ready, .art-frame.cycle { cursor: pointer; }
+  .art-base.on, .art-frame.playing .art-gif, .art-frame.ended .art-end { opacity: 1; }
+  /* Triangle count and match: only shown with ?debug in the URL. */
+  .art-wrap figcaption { display: none; font-size: 12px; letter-spacing: .04em; opacity: .7; min-height: 1.4em; font-variant-numeric: tabular-nums; }
+  .debug .art-wrap figcaption { display: block; }
+  @media (max-width: 600px) { .hero { gap: 16px; } .art { width: clamp(110px, 32vw, 160px); } .art-frame { border-radius: 14px; } .links { gap: 16px; } }
+  .hero h1 { margin: 0; font-weight: 300; font-size: clamp(40px, 7vw, 64px); letter-spacing: -.02em; line-height: 1.05; }
+  .hero p { margin: 8px 0 16px; font-size: 18px; }
+  /* Name and title: a pastel palette drifting through the letters, with a white glint sweeping across.
+     The glint is a copy of the text (::after) so the two can run on their own timings. */
+  .shimmer {
+    position: relative; color: transparent; text-shadow: none;
+    background: linear-gradient(90deg, #fff, #dcd2ff, #c3d3ff, #f1dcff, #fff) 0 0 / 200% 100%;
+    -webkit-background-clip: text; background-clip: text; animation: drift 6s linear infinite;
+    filter: drop-shadow(0 0 6px rgba(220, 200, 255, .45)) drop-shadow(0 1px 3px rgba(25, 12, 70, .4));
+  }
+  .shimmer::after {
+    content: attr(data-text); position: absolute; left: 0; top: 0; pointer-events: none;
+    background: linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, .95) 50%, transparent 60%) 130% 0 / 250% 100% no-repeat;
+    -webkit-background-clip: text; background-clip: text; animation: glint 4s ease-in-out infinite;
+  }
+  /* The title keeps only the glint, over slightly dimmed white so the glint shows. */
+  .hero .title { display: inline-block; color: rgba(255, 255, 255, .82); background: none; animation: none; filter: drop-shadow(0 1px 3px rgba(25, 12, 70, .4)); }
+  /* It sets its own color rather than inheriting, so it needs the theme's color fade too (plus the reveal's). */
+  .hero .title { transition: opacity .7s ease-out, translate .7s ease-out, color .6s; }
+  .title::after { animation-delay: .3s; } /* the glint carries on from the name down to the title */
+  @keyframes drift { to { background-position: -200% 0; } }
+  @keyframes glint { 0% { background-position: 130% 0; } 60%, 100% { background-position: -30% 0; } }
+  .no-motion .shimmer, .no-motion .shimmer::after { animation: none; }
+  .no-motion .shimmer::after { display: none; }
+  .links { display: flex; gap: 22px; }
+  .links a, .row .actions a { text-decoration: none; opacity: .8; transition: opacity .2s; }
+  .links a:hover, .row .actions a:hover { opacity: 1; }
+
+  /* Content sits directly on the mesh; the triangles behind each .facet deepen into a crystal panel (drawn in the canvas). */
+  section { padding-top: 56px; }
+  h2 { font-weight: 400; font-size: 14px; letter-spacing: .2em; margin: 0 0 18px; opacity: .85; }
+  .facet { padding: 26px 32px; }
+  .facet.reveal { transition: opacity .7s ease-out, translate .7s ease-out, color .6s, text-shadow .6s; }
+  /* Light mode with frosted panels: text on the panels goes deep indigo; the header and headings stay white. */
+  /* Light mode: a paler gradient with frosted panels, so text goes near-black. The name keeps its shimmer. */
+  html[data-theme="light"] main, html[data-theme="light"] #nav, html[data-theme="light"] .facet { color: #17102f; text-shadow: 0 0 10px rgba(255, 255, 255, .35); }
+  html[data-theme="light"] .hero .title { color: rgba(23, 16, 47, .85); filter: none; }
+  html[data-theme="light"] .facet .tags { opacity: .8; }
+  html[data-theme="light"] #theme { filter: none; }
+  html[data-theme="light"] #nav.scrolled { background: linear-gradient(rgba(235, 228, 255, .7), rgba(235, 228, 255, 0)); }
+  main, #nav { transition: color .6s; }
+  /* Glass toast, bottom center: clear of the nav, and where "copied" messages are usually expected. */
+  #toast {
+    position: fixed; left: 50%; bottom: 28px; z-index: 3; padding: 10px 18px; border-radius: 14px;
+    font-size: 14px; letter-spacing: .02em; white-space: nowrap; max-width: calc(100vw - 32px); overflow: hidden; text-overflow: ellipsis; color: #fff; text-shadow: 0 1px 6px rgba(25, 12, 70, .35);
+    background: rgba(255, 255, 255, .16); border: 1px solid rgba(255, 255, 255, .35);
+    backdrop-filter: blur(14px) saturate(1.4); -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    box-shadow: 0 10px 30px rgba(20, 10, 60, .25), inset 0 1px 0 rgba(255, 255, 255, .35);
+    opacity: 0; translate: -50% 12px; pointer-events: none; transition: opacity .25s ease-out, translate .25s ease-out;
+  }
+  #toast.show { opacity: 1; translate: -50% 0; }
+  html[data-theme="light"] #toast { color: #17102f; text-shadow: none; background: rgba(255, 255, 255, .45); border-color: rgba(255, 255, 255, .7); }
+  .row { display: grid; grid-template-columns: 1fr auto; gap: 4px 20px; padding: 14px 0; }
+  .row b { font-weight: 700; }
+  .row .when { opacity: .75; font-size: 14px; }
+  .row h3 { margin: 0; font-size: 17px; font-weight: 700; }
+  .row p { margin: 0; font-size: 14px; opacity: .85; grid-column: 1; }
+  .row .tags { grid-column: 1; font-size: 12px; opacity: .7; letter-spacing: .03em; }
+  .prose p { margin: 0 0 14px; line-height: 1.7; opacity: .92; }
+  .prose p:last-child { margin-bottom: 0; }
+  .row .actions { grid-row: 1; grid-column: 2; display: flex; gap: 14px; font-size: 14px; }
+
+  /* Links to the site's other pages, plus the dark mode toggle. */
+  #nav { position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: flex-end; align-items: center; gap: 26px; padding: 22px 32px; font-size: 14px; letter-spacing: .08em; text-shadow: var(--shadow); z-index: 1; }
+  #nav { transition: background .3s, color .6s; }
+  #nav.scrolled { background: linear-gradient(rgba(27, 15, 74, .45), rgba(27, 15, 74, 0)); }
+  #nav a { text-decoration: none; opacity: .75; transition: opacity .2s; }
+  #nav a:hover, #nav a.active { opacity: 1; }
+  #nav a.active { text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 1px; }
+  #theme { font: inherit; font-size: 16px; line-height: 1; padding: 0; width: 22px; height: 22px; display: grid; place-items: center; color: inherit; background: none; border: 0; opacity: .75; filter: drop-shadow(0 1px 2px rgba(20, 10, 60, .35)); }
+  #theme svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  #theme:hover { opacity: 1; background: none; }
+  @media (max-width: 600px) { #nav { justify-content: center; gap: 22px; padding: 16px; } main { padding-top: 90px; } }
+  /* Sections fade in as they scroll into view, staggered along the same diagonal as the mesh. */
+  .reveal { opacity: 0; translate: 0 14px; transition: opacity .7s ease-out, translate .7s ease-out; }
+  .reveal.in { opacity: 1; translate: 0 0; }
+  .no-motion .reveal { opacity: 1; translate: none; transition: none; }
+  #toggle { position: fixed; right: 16px; bottom: 16px; background: rgba(30, 20, 70, .55); }
+  #panel select { font: inherit; font-size: 12px; padding: 3px; border-radius: 6px; background: rgba(255, 255, 255, .12); color: #fff; border: 1px solid rgba(255, 255, 255, .3); }
+  #panel option { color: #000; }
+  #panel { position: fixed; right: 16px; bottom: 60px; width: 260px; padding: 14px 16px; border-radius: 12px; background: rgba(20, 16, 40, .82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: grid; gap: 10px; font-size: 13px; }
+  #panel[hidden] { display: none; }
+  #panel label { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; align-items: center; }
+  #panel input[type=range] { grid-column: 1 / -1; width: 100%; }
+  #panel .colors { display: flex; gap: 8px; align-items: center; }
+  #panel input[type=color] { width: 36px; height: 26px; border: 0; padding: 0; background: none; cursor: pointer; }
+  #panel .row { display: flex; gap: 8px; }
+  button { font: inherit; font-size: 13px; color: #fff; background: rgba(255, 255, 255, .15); border: 1px solid rgba(255, 255, 255, .3); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+  button:hover { background: rgba(255, 255, 255, .25); }
+  #panel .row button { flex: 1; }
+</style>
+</head>
+<body>
+<canvas id="bg" aria-hidden="true"></canvas>
+
+<nav id="nav">
+  <a href="#" data-view="home">home</a><a href="#about" data-view="about">about</a><a href="resume.pdf">resume</a>
+  <button id="theme" aria-label="Toggle dark mode"></button>
+</nav>
+
+<main>
+  <header class="hero">
+    <div class="hero-text">
+      <h1 class="reveal">jeffrey chen</h1>
+      <p class="reveal shimmer title" data-text="software engineer" id="jobTitle">software engineer</p>
+      <nav class="links reveal"><a href="https://github.com/wovensoul" target="_blank" rel="noopener">github</a><a href="https://www.linkedin.com/in/jffrychn" target="_blank" rel="noopener">linkedin</a><a href="mailto:jeffrey@jeffrey.work" id="emailLink">email</a></nav>
+    </div>
+    <figure class="art-wrap reveal"><div class="art-frame" id="artFrame"><canvas class="art" id="art" aria-label="A cat in a pink hat, drawn with triangles" role="img"></canvas><img class="art-base" id="artBase" alt=""><img class="art-base" id="artBase2" alt=""><img class="art-gif" id="artGif" alt=""><canvas class="art-end" id="artEnd"></canvas></div><figcaption id="artCaption"></figcaption></figure>
+  </header>
+
+  <div id="home-view">
+  <section id="experience">
+    <h2 class="reveal">experience</h2>
+    <div class="facet reveal">
+      <div class="row hoverable"><div><b>swe</b> @ garner health</div><span class="when">feb 2026 – present</span></div>
+      <div class="row hoverable"><div><b>swe</b> @ pupil</div><span class="when">oct 2023 – may 2024</span></div>
+      <div class="row hoverable"><div><b>it</b> @ nyu</div><span class="when">feb 2022 – may 2024</span></div>
+    </div>
+  </section>
+
+  <section id="projects">
+    <h2 class="reveal">projects</h2>
+    <div class="facet reveal">
+      <article class="row hoverable">
+        <h3>personal website</h3>
+        <p>you are here! rebuilt around delaunay triangulation and geometrized art</p>
+        <div class="tags">html · css · javascript · canvas · claude · cursor</div>
+        <div class="actions"><a href="https://github.com/wovensoul/personal-website" target="_blank" rel="noopener">repo</a></div>
+      </article>
+      <article class="row hoverable">
+        <h3>sales insights agent</h3>
+        <p>multi-agent for data analytics and forecasts</p>
+        <div class="tags">python · google adk · vertex ai · bigquery · bqml</div>
+        <div class="actions"><a href="https://github.com/wovensoul/sales-insights-agent" target="_blank" rel="noopener">repo</a></div>
+      </article>
+      <article class="row hoverable">
+        <h3>sales analytics</h3>
+        <p>rest api to manage and analyze sales</p>
+        <div class="tags">java · spring boot · spring jpa · hibernate · maven</div>
+        <div class="actions"><a href="https://github.com/wovensoul/sales-analytics" target="_blank" rel="noopener">repo</a></div>
+      </article>
+      <article class="row hoverable">
+        <h3>matcha generator</h3>
+        <p>an ai-powered web app that generates matcha recipes</p>
+        <div class="tags">next.js · react · tsx · docker</div>
+        <div class="actions"><a href="https://matcha-generator.vercel.app" target="_blank" rel="noopener">demo</a><a href="https://github.com/wovensoul/matcha-generator" target="_blank" rel="noopener">repo</a></div>
+      </article>
+      <article class="row hoverable">
+        <h3>matchaluv</h3>
+        <p>a matcha centric social media app</p>
+        <div class="tags">flutter · firebase</div>
+        <div class="actions"><a href="https://github.com/wovensoul/matchaluv" target="_blank" rel="noopener">repo</a></div>
+      </article>
+      <article class="row hoverable">
+        <h3>personal blog</h3>
+        <p>a blog implementing headless cms with automatic builds and deploys</p>
+        <div class="tags">vue · strapi · render</div>
+      </article>
+    </div>
+  </section>
+  </div>
+
+  <div id="about-view" hidden>
+  <section>
+    <h2 class="reveal">about</h2>
+    <div class="facet prose reveal">
+      <p>hello! my name is jeffrey but you can call me jeff! i’ve been a software engineer at Garner Health for <span data-since="2026-02">~9 months</span>, where we help people find better care. i’ve had the awesome opportunity to contribute to our mission from a few different angles, from building member-facing features to the internal tools and infra that keep our business ops running.</p>
+      <p>i’m soaking up as much as i can and getting exposure all across the company, and i’ve even started conducting interviews for entry-level candidates! between the work itself and some amazing mentorship, i’ve picked up (and really internalized) good agentic coding hygiene and workflows that keep accelerating my learning and growth as an engineer.</p>
+      <p>i’m also pursuing a master’s in cybersecurity, a field i think will only become more important as ai gets adopted everywhere. on the more playful side, lately i’ve been nerding out over generative algorithms like cellular automata and delaunay triangulation. fun fact: they’re what’s behind the background and the geometrized images on this site!</p>
+      <p>as someone who’s had a bumpy, unconventional career path, i’m always down for a coffee chat! happy to offer some unfiltered, non-generic perspectives on tech, careers, or where to find the best boba in nyc!</p>
+      <p>when i’m not coding, i’m getting into photography, going to kpop and music concerts, ice skating, and trying new cafes and foods around the city!</p>
+    </div>
+  </section>
+  </div>
+</main>
+
+<button id="toggle">Settings</button>
+<div id="panel" hidden>
+  <div class="colors">Colors
+    <input type="color" id="c1" value="#678dfe">
+    <input type="color" id="c2" value="#b79ff9">
+    <input type="color" id="c3" value="#885bf1">
+  </div>
+  <label>Background before reveal
+    <select id="base" style="grid-column: 1 / -1">
+      <option value="avg" selected>Average of the gradient colors</option>
+      <option value="gradient">Smooth gradient</option>
+      <option value="white">White</option>
+    </select>
+  </label>
+  <label>Motion <span id="motionV"></span>
+    <select id="motion" style="grid-column: 1 / -1">
+      <option value="auto" selected>Auto (based on device)</option>
+      <option value="full">Full</option>
+      <option value="lite">Lite: lighter rendering, fewer ripples</option>
+      <option value="off">Off: static mesh, no animation</option>
+    </select>
+  </label>
+  <label>Triangle size <span id="sizeV"></span><input type="range" id="size" min="30" max="220" value="150"></label>
+  <label>Unevenness <span id="jitterV"></span><input type="range" id="jitter" min="0" max="100" value="70"></label>
+  <label>Facet shading <span id="shadeV"></span><input type="range" id="shade" min="0" max="100" value="50"></label>
+  <label>Crystal sheen <span id="sheenV"></span><input type="range" id="sheen" min="0" max="100" value="20"></label>
+  <label>Facet opacity <span id="opacityV"></span><input type="range" id="opacity" min="30" max="100" value="80"></label>
+  <label>Edge lines <span id="edgeV"></span><input type="range" id="edge" min="0" max="60" value="10"></label>
+  <label>Reveal flash <span id="flashV"></span><input type="range" id="flash" min="0" max="100" value="10"></label>
+  <label>Hover ripple <span id="rippleV"></span><input type="range" id="ripple" min="0" max="100" value="55"></label>
+  <label>Ripple reach <span id="reachV"></span><input type="range" id="reach" min="100" max="900" step="20" value="440"></label>
+  <label>Ripple spacing <span id="gapV"></span><input type="range" id="gap" min="40" max="600" step="10" value="260"></label>
+  <label>Animation length <span id="durV"></span><input type="range" id="dur" min="300" max="5000" step="100" value="2000"></label>
+  <div class="row"><button id="replay">Replay</button><button id="regen">New mesh</button></div>
+</div>
+
+<script id="artWorker" type="text/js-worker">
+// Each worker keeps its own copy of the canvas; the main thread broadcasts every committed
+// shape so all copies stay identical, and each worker searches its share of the candidates.
+let W, H, target, current, alpha;
+const span = new Int32Array(3 * 1024);
+let spanN = 0;
+
+function rasterize(p) {
+  const [x0, y0, x1, y1, x2, y2] = p;
+  const ys = Math.max(0, Math.ceil(Math.min(y0, y1, y2) - 0.5));
+  const ye = Math.min(H - 1, Math.floor(Math.max(y0, y1, y2) - 0.5));
+  spanN = 0;
+  for (let y = ys; y <= ye; y++) {
+    const yc = y + 0.5;
+    let lo = Infinity, hi = -Infinity, x;
+    if ((y0 <= yc) !== (y1 <= yc)) { x = x0 + (yc - y0) / (y1 - y0) * (x1 - x0); if (x < lo) lo = x; if (x > hi) hi = x; }
+    if ((y1 <= yc) !== (y2 <= yc)) { x = x1 + (yc - y1) / (y2 - y1) * (x2 - x1); if (x < lo) lo = x; if (x > hi) hi = x; }
+    if ((y2 <= yc) !== (y0 <= yc)) { x = x2 + (yc - y2) / (y0 - y2) * (x0 - x2); if (x < lo) lo = x; if (x > hi) hi = x; }
+    const xa = Math.max(0, Math.ceil(lo - 0.5)), xb = Math.min(W - 1, Math.floor(hi - 0.5));
+    if (xa <= xb) { span[spanN++] = y; span[spanN++] = xa; span[spanN++] = xb; }
+  }
+  return spanN;
+}
+
+// Best color for the shape, then how much the total squared error would change if drawn.
+function evaluate(p) {
+  if (!rasterize(p)) return null;
+  let r = 0, g = 0, b = 0, cnt = 0;
+  const ia = 1 / alpha;
+  for (let s = 0; s < spanN; s += 3) {
+    const row = span[s] * W;
+    for (let x = span[s + 1]; x <= span[s + 2]; x++) {
+      const i = (row + x) * 3;
+      r += (target[i] - current[i]) * ia + current[i];
+      g += (target[i + 1] - current[i + 1]) * ia + current[i + 1];
+      b += (target[i + 2] - current[i + 2]) * ia + current[i + 2];
+      cnt++;
+    }
+  }
+  const cl = v => Math.max(0, Math.min(255, Math.round(v / cnt)));
+  const cr = cl(r), cg = cl(g), cb = cl(b);
+  let d = 0;
+  for (let s = 0; s < spanN; s += 3) {
+    const row = span[s] * W;
+    for (let x = span[s + 1]; x <= span[s + 2]; x++) {
+      const i = (row + x) * 3;
+      for (let c = 0; c < 3; c++) {
+        const cur = current[i + c], t = target[i + c], col = c === 0 ? cr : c === 1 ? cg : cb;
+        const nv = cur + (col - cur) * alpha;
+        d += (t - nv) * (t - nv) - (t - cur) * (t - cur);
+      }
+    }
+  }
+  return { delta: d, color: [cr, cg, cb] };
+}
+
+function angleAt(ax, ay, bx, by, cx, cy) {
+  const ux = bx - ax, uy = by - ay, vx = cx - ax, vy = cy - ay;
+  const m = Math.hypot(ux, uy) * Math.hypot(vx, vy);
+  return m ? Math.acos(Math.max(-1, Math.min(1, (ux * vx + uy * vy) / m))) * 57.2958 : 0;
+}
+// Reject slivers: every corner must be at least 15 degrees.
+function valid(p) {
+  return angleAt(p[0], p[1], p[2], p[3], p[4], p[5]) > 15 &&
+         angleAt(p[2], p[3], p[4], p[5], p[0], p[1]) > 15 &&
+         angleAt(p[4], p[5], p[0], p[1], p[2], p[3]) > 15;
+}
+
+function randomTriangle() {
+  for (;;) {
+    const x = Math.random() * W, y = Math.random() * H, R = 8 + Math.random() * Math.max(W, H) * 0.25;
+    const p = [x, y, x + (Math.random() * 2 - 1) * R, y + (Math.random() * 2 - 1) * R, x + (Math.random() * 2 - 1) * R, y + (Math.random() * 2 - 1) * R];
+    if (valid(p)) return p;
+  }
+}
+const gauss = () => Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
+function mutate(p) {
+  for (;;) {
+    const q = p.slice(), k = (Math.random() * 3 | 0) * 2;
+    q[k] = Math.max(-16, Math.min(W + 16, q[k] + gauss() * 16));
+    q[k + 1] = Math.max(-16, Math.min(H + 16, q[k + 1] + gauss() * 16));
+    if (valid(q)) return q;
+  }
+}
+
+function search(n, maxAge) {
+  let best = null;
+  for (let i = 0; i < n; i++) {
+    const p = randomTriangle(), r = evaluate(p);
+    if (r && (!best || r.delta < best.delta)) best = { pts: p, ...r };
+  }
+  if (!best) return null;
+  // Hill climb: keep tweaks that help, stop after maxAge failures in a row.
+  for (let fails = 0; fails < maxAge;) {
+    const q = mutate(best.pts), r = evaluate(q);
+    if (r && r.delta < best.delta) { best = { pts: q, ...r }; fails = 0; } else fails++;
+  }
+  return best;
+}
+
+function commit(p, color) {
+  rasterize(p);
+  for (let s = 0; s < spanN; s += 3) {
+    const row = span[s] * W;
+    for (let x = span[s + 1]; x <= span[s + 2]; x++) {
+      const i = (row + x) * 3;
+      for (let c = 0; c < 3; c++) current[i + c] += (color[c] - current[i + c]) * alpha;
+    }
+  }
+}
+
+onmessage = ({ data: m }) => {
+  if (m.type === 'init') {
+    W = m.w; H = m.h; alpha = m.alpha; target = m.target;
+    current = new Float32Array(W * H * 3);
+    for (let i = 0; i < current.length; i += 3) current.set(m.bg, i);
+  } else if (m.type === 'step') {
+    let err = 0;
+    for (let i = 0; i < current.length; i++) { const d = target[i] - current[i]; err += d * d; }
+    postMessage({ best: search(m.n, m.age), err });
+  } else if (m.type === 'commit') {
+    commit(m.pts, m.color);
+  }
+};
+</script>
+<script>
+const $ = id => document.getElementById(id);
+const canvas = $('bg'), ctx = canvas.getContext('2d');
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const coarsePointer = matchMedia('(pointer: coarse)');
+if (coarsePointer.matches) $('shade').value = 20; // phones/tablets get softer facet shading by default
+
+// 'full' | 'lite' | 'off'. Auto respects the OS reduced-motion setting, and drops to lite on
+// touch devices or machines that report few cores / little memory.
+function motionMode() {
+  const m = $('motion').value;
+  if (m !== 'auto') return m;
+  if (reducedMotion.matches) return 'off';
+  const weak = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
+  return coarsePointer.matches || weak ? 'lite' : 'full';
+}
+
+let W = 0, H = 0, tris = [], animStart = 0, raf = 0;
+
+// ---------- gradient ----------
+const hexToRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+function stops() { return [$('c1').value, $('c2').value, $('c3').value].map(hexToRgb); }
+
+// Same math as a canvas linear gradient from (0,0) to (W,H): project the point onto that diagonal.
+function gradientT(x, y) { return Math.max(0, Math.min(1, (x * W + y * H) / (W * W + H * H))); }
+function colorAt(t, s) {
+  const seg = t * (s.length - 1), i = Math.min(s.length - 2, Math.floor(seg)), f = seg - i;
+  return s[i].map((v, k) => v + (s[i + 1][k] - v) * f);
+}
+// Average color of the gradient as it actually covers the screen (sampled on a grid).
+function averageColor(s) {
+  const sum = [0, 0, 0], N = 40;
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+    colorAt(gradientT((i + 0.5) / N * W, (j + 0.5) / N * H), s).forEach((v, k) => sum[k] += v);
+  }
+  return sum.map(v => Math.round(v / (N * N)));
+}
+
+function drawBase() {
+  const mode = $('base').value;
+  if (mode === 'gradient') return drawGradient(stops());
+  ctx.fillStyle = mode === 'white' ? '#fff' : `rgb(${avgColor})`;
+  ctx.fillRect(0, 0, W, H);
+}
+
+function drawGradient(s) {
+  const g = ctx.createLinearGradient(0, 0, W, H);
+  s.forEach((c, i) => g.addColorStop(i / (s.length - 1), `rgb(${c})`));
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+}
+
+// ---------- points & Delaunay triangulation (Bowyer–Watson) ----------
+function makePoints(w = W, h = H, cell = +$('size').value) {
+  const jitter = +$('jitter').value / 100;
+  const cols = Math.max(2, Math.round(w / cell)), rows = Math.max(2, Math.round(h / cell));
+  const dx = w / cols, dy = h / rows, pts = [];
+  for (let r = 0; r <= rows; r++) {
+    for (let c = 0; c <= cols; c++) {
+      let x = c * dx, y = r * dy;
+      const edgeX = c === 0 || c === cols, edgeY = r === 0 || r === rows;
+      // Edge points only slide along their edge so the mesh always covers the whole screen.
+      if (!edgeX) x += (Math.random() - 0.5) * dx * jitter;
+      if (!edgeY) y += (Math.random() - 0.5) * dy * jitter;
+      pts.push([x, y]);
+    }
+  }
+  return pts;
+}
+
+function circumcircle(p, a, b, c) {
+  const [ax, ay] = p[a], [bx, by] = p[b], [cx, cy] = p[c];
+  const d = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by));
+  const a2 = ax * ax + ay * ay, b2 = bx * bx + by * by, c2 = cx * cx + cy * cy;
+  const x = (a2 * (by - cy) + b2 * (cy - ay) + c2 * (ay - by)) / d;
+  const y = (a2 * (cx - bx) + b2 * (ax - cx) + c2 * (bx - ax)) / d;
+  return { x, y, r2: (ax - x) ** 2 + (ay - y) ** 2 };
+}
+
+function delaunay(points) {
+  const p = points.slice(), n = p.length, M = Math.max(W, H) * 10;
+  p.push([-M, -M], [M * 2, -M], [-M, M * 2]); // super-triangle containing everything
+  let tri = [{ v: [n, n + 1, n + 2], cc: circumcircle(p, n, n + 1, n + 2) }];
+  for (let i = 0; i < n; i++) {
+    const [x, y] = p[i], keep = [], edges = new Map();
+    for (const t of tri) {
+      if ((x - t.cc.x) ** 2 + (y - t.cc.y) ** 2 < t.cc.r2) {
+        for (let k = 0; k < 3; k++) {
+          const a = t.v[k], b = t.v[(k + 1) % 3], key = a < b ? a + ',' + b : b + ',' + a;
+          edges.set(key, edges.has(key) ? null : [a, b]);
+        }
+      } else keep.push(t);
+    }
+    for (const e of edges.values()) if (e) keep.push({ v: [e[0], e[1], i], cc: circumcircle(p, e[0], e[1], i) });
+    tri = keep;
+  }
+  return tri.filter(t => t.v.every(v => v < n)).map(t => t.v.map(v => p[v]));
+}
+
+// ---------- mesh ----------
+function buildMesh() {
+  tris = delaunay(makePoints()).map(([a, b, c]) => {
+    const cx = (a[0] + b[0] + c[0]) / 3, cy = (a[1] + b[1] + c[1]) / 3;
+    // Wave order: distance along the top-left -> bottom-right diagonal, plus a little randomness.
+    const wave = Math.max(0, Math.min(1, (cx + cy) / (W + H) + (Math.random() - 0.5) * 0.08));
+    // Each facet is "tilted" a bit differently, so light from the top-left catches it differently.
+    return { pts: [a, b, c], cx, cy, wave, tone: Math.random() - 0.5, tilt: (Math.random() - 0.5) * 2.2, shine: 0.5 + Math.random() * 0.5 };
+  });
+  colorMesh();
+}
+
+const mix = (c, target, f) => c.map(v => Math.round(v + (target - v) * f));
+
+let avgColor = [128, 128, 128];
+
+function colorMesh() {
+  const s = stops(), shade = +$('shade').value / 100, sheen = +$('sheen').value / 100;
+  avgColor = averageColor(s);
+  for (const t of tris) {
+    const light = 1 + t.tone * 0.3 * shade; // per-facet brightness variation
+    t.col = colorAt(gradientT(t.cx, t.cy), s).map(v => Math.round(Math.max(0, Math.min(255, v * light))));
+    t.fill = `rgb(${t.col})`;
+    if (sheen === 0 || motionMode() !== 'full') { t.paint = t.fill; continue; }
+    // Light comes from the top-left; run a highlight-to-shadow gradient across the facet along that direction.
+    const ang = Math.PI * 1.25 + t.tilt, dx = Math.cos(ang), dy = Math.sin(ang);
+    const proj = t.pts.map(([x, y]) => x * dx + y * dy);
+    const hi = t.pts[proj.indexOf(Math.max(...proj))], lo = t.pts[proj.indexOf(Math.min(...proj))];
+    const g = ctx.createLinearGradient(hi[0], hi[1], lo[0], lo[1]);
+    g.addColorStop(0, `rgb(${mix(t.col, 255, 0.5 * sheen * t.shine)})`);
+    g.addColorStop(0.45, t.fill);
+    g.addColorStop(1, `rgb(${mix(t.col, 0, 0.3 * sheen)})`);
+    t.paint = g;
+  }
+}
+
+// ---------- drawing & animation ----------
+const FADE = 0.28; // each triangle's own fade-in, as a fraction of the total animation
+const easeOut = t => 1 - (1 - t) ** 3;
+
+let edgeAlpha = 0, flashAmt = 0, facetOpacity = 1;
+
+// ---------- hover ripples ----------
+// Reach and spacing come from the settings: short reach + tight spacing gives a smooth local wake,
+// long reach + wide spacing gives distinct rings travelling outward like water.
+const RIPPLE_SPEED = 0.55, RIPPLE_WIDTH = 65, RIPPLE_MIN_DIST = 12, RIPPLE_EASE_IN = 220, MAX_RIPPLES = 30;
+const rippleReach = () => +$('reach').value;
+// A ring fades out as its radius reaches its reach. r.s scales reach, strength and width.
+const rippleLife = r => rippleReach() * r.s / RIPPLE_SPEED;
+let ripples = [], lastSpawn = null;
+
+// Rings started near the middle of the screen, where the content column sits, stay small and faint;
+// rings from the edges grow to RIPPLE_EDGE_MAX. Vertical distance counts less, since content runs the full height.
+const RIPPLE_CENTER_MIN = 0.25, RIPPLE_EDGE_MAX = 0.6;
+function rippleScale(x, y) {
+  const dx = (x - W / 2) / (W / 2), dy = (y - innerHeight / 2) / (innerHeight / 2);
+  const d = Math.min(1, Math.hypot(dx, dy * 0.4)), u = Math.max(0, Math.min(1, (d - 0.2) / 0.8));
+  return RIPPLE_CENTER_MIN + (RIPPLE_EDGE_MAX - RIPPLE_CENTER_MIN) * u * u * (3 - 2 * u);
+}
+
+function spawnRipple(x, y, force) {
+  const mode = motionMode();
+  if (mode === 'off' || !+$('ripple').value) return;
+  const now = performance.now();
+  if (!force && lastSpawn && (Math.hypot(x - lastSpawn.x, y - lastSpawn.y) < RIPPLE_MIN_DIST || now - lastSpawn.t < +$('gap').value)) return;
+  lastSpawn = { x, y, t: now };
+  ripples.push({ x, y, t: now, s: rippleScale(x, y) });
+  while (ripples.length > (mode === 'lite' ? 4 : MAX_RIPPLES)) ripples.shift();
+  ensureLoop();
+}
+
+// How strongly the passing rings push a triangle, 0..1. Overlapping rings don't stack (max, not sum).
+function rippleAt(x, y, now) {
+  let k = 0;
+  for (const r of ripples) {
+    const age = now - r.t, d = Math.hypot(x - r.x, y - r.y) - age * RIPPLE_SPEED, w = RIPPLE_WIDTH * (0.6 + 0.4 * r.s);
+    const u = age / rippleLife(r), fade = u < 0.6 ? 1 : 1 - (u - 0.6) / 0.4; // full strength, then fade over the last 40%
+    const ramp = Math.min(1, age / RIPPLE_EASE_IN), easeIn = ramp * ramp * (3 - 2 * ramp);
+    k = Math.max(k, Math.exp(-(d * d) / (w * w)) * fade * easeIn * r.s);
+  }
+  return k;
+}
+
+// Each triangle's glow chases the ring value: quick to rise, gentle to settle, which smooths out
+// rings arriving at slightly different times without blurring separate rings into one blob.
+const GLOW_RISE = 60, GLOW_FALL = 240;
+let lastFrame = 0;
+
+// lift: the triangle sits behind content and deepens into a crystal panel. hot: that content is hovered.
+function drawTriangle(t, progress, k = 0, lift = 0, hot = 0) {
+  const e = easeOut(progress), s = (0.55 + 0.45 * e) * (1 - 0.3 * k);
+  const [a, b, c] = t.pts;
+  ctx.beginPath();
+  ctx.moveTo(t.cx + (a[0] - t.cx) * s, t.cy + (a[1] - t.cy) * s);
+  ctx.lineTo(t.cx + (b[0] - t.cx) * s, t.cy + (b[1] - t.cy) * s);
+  ctx.lineTo(t.cx + (c[0] - t.cx) * s, t.cy + (c[1] - t.cy) * s);
+  ctx.closePath();
+  const reveal = Math.min(1, e * 1.6);
+  ctx.globalAlpha = reveal * facetOpacity;
+  ctx.fillStyle = ctx.strokeStyle = t.paint;
+  ctx.fill();
+  if (facetOpacity > 0.99) ctx.stroke(); // hides hairline seams between neighbouring opaque triangles
+  // Freshly revealed triangles start lighter and settle into their final color; ripples lighten them too.
+  const f = Math.min(1, flashAmt * (1 - e) + 0.55 * k);
+  if (f > 0.005) {
+    ctx.globalAlpha = reveal * f;
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+  }
+  if (lift > 0.005) {
+    // Both themes frost the panel lighter: pale glass behind dark text in light mode, a soft lilac haze in dark mode.
+    // Per-facet variation keeps it crystalline.
+    const dark = theme === 'dark';
+    ctx.globalAlpha = Math.max(0, reveal * lift * (dark ? 0.1 + 0.14 * hot + t.tone * 0.05 : 0.42 + 0.14 * hot + t.tone * 0.14));
+    ctx.fillStyle = dark ? '#d8ccff' : '#ffffff';
+    ctx.fill();
+  }
+  const edge = Math.min(1, edgeAlpha + 0.35 * k + 0.3 * lift + 0.35 * hot);
+  if (edge) {
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = `rgba(255,255,255,${edge * e})`;
+    ctx.stroke();
+  }
+}
+
+function ensureLoop() { if (!raf) { lastFrame = performance.now(); raf = requestAnimationFrame(render); } }
+
+function render(now) {
+  const total = +$('dur').value, elapsed = (now - animStart) / total;
+  edgeAlpha = +$('edge').value / 100;
+  flashAmt = +$('flash').value / 100;
+  facetOpacity = +$('opacity').value / 100;
+  const strength = +$('ripple').value / 100 * (theme === 'dark' ? 0.35 : 1); // white ripples glare on the dark palette
+  ripples = ripples.filter(r => now - r.t < rippleLife(r));
+  const dt = Math.min(50, Math.max(0, now - lastFrame)); lastFrame = now;
+  drawBase();
+  const panels = panelRects();
+  let done = true, glowing = false, lifting = false;
+  for (const t of tris) {
+    const target = ripples.length ? rippleAt(t.cx, t.cy, now) * strength : 0;
+    t.glow = t.glow || 0;
+    t.glow += (target - t.glow) * (1 - Math.exp(-dt / (target > t.glow ? GLOW_RISE : GLOW_FALL)));
+    if (t.glow < 0.002) t.glow = 0; else glowing = true;
+    const p = Math.max(0, Math.min(1, (elapsed - t.wave * (1 - FADE)) / FADE));
+    if (p < 1) done = false;
+    // Panels: how far inside each content box (as a rounded rectangle) the triangle sits, softened at the border.
+    let liftT = 0, hotT = 0;
+    for (const r of panels) {
+      const v = panelMembership(t, r);
+      liftT = Math.max(liftT, v);
+      if (r.hot) hotT = Math.max(hotT, v);
+    }
+    t.lift = chase(t.lift || 0, liftT, dt, 140); t.hot = chase(t.hot || 0, hotT, dt, 90);
+    if (Math.abs(t.lift - liftT) > 0.002 || Math.abs(t.hot - hotT) > 0.002) lifting = true;
+    if (p > 0) drawTriangle(t, p, t.glow, t.lift, t.hot);
+  }
+  ctx.globalAlpha = 1;
+  raf = done && !ripples.length && !glowing && !lifting ? 0 : requestAnimationFrame(render);
+}
+
+function play() {
+  cancelAnimationFrame(raf);
+  ripples = [];
+  animStart = motionMode() === 'off' ? -Infinity : performance.now();
+  raf = requestAnimationFrame(render);
+}
+
+function resize() {
+  // Lite renders at 1x: a 3x phone screen would otherwise push 9x the pixels every frame.
+  const dpr = motionMode() === 'full' ? Math.min(window.devicePixelRatio || 1, 2) : 1;
+  W = innerWidth; H = Math.max(innerHeight, canvas.clientHeight);
+  canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.lineWidth = 0.75; ctx.lineJoin = 'round';
+  buildMesh();
+}
+
+// ---------- wiring ----------
+const labels = { size: v => v + 'px', jitter: v => v + '%', shade: v => v + '%', sheen: v => v + '%', opacity: v => v + '%', edge: v => v + '%', flash: v => v + '%', ripple: v => v + '%', reach: v => v + 'px', gap: v => v + 'ms', dur: v => (v / 1000).toFixed(1) + 's' };
+for (const [id, f] of Object.entries(labels)) {
+  const update = () => $(id + 'V').textContent = f(+$(id).value);
+  $(id).addEventListener('input', update); update();
+}
+// Mesh-shape settings rebuild and replay; colors and shading recolor instantly.
+for (const id of ['size', 'jitter']) $(id).addEventListener('change', () => { buildMesh(); play(); });
+for (const id of ['c1', 'c2', 'c3', 'shade', 'sheen']) $(id).addEventListener('input', () => { colorMesh(); ensureLoop(); });
+for (const id of ['edge', 'opacity', 'base']) $(id).addEventListener('input', ensureLoop);
+const showMotion = () => $('motionV').textContent = $('motion').value === 'auto' ? '(using ' + motionMode() + ')' : '';
+$('motion').addEventListener('input', () => { showMotion(); resize(); play(); });
+reducedMotion.addEventListener('change', () => { showMotion(); resize(); play(); });
+showMotion();
+
+const insidePanel = e => e.target.closest && e.target.closest('#panel, #toggle, #artFrame'); // no ripples from these
+addEventListener('pointermove', e => { if (e.pointerType === 'mouse' && !insidePanel(e)) spawnRipple(e.clientX, e.clientY); });
+addEventListener('pointerdown', e => { if (!insidePanel(e)) spawnRipple(e.clientX, e.clientY, true); });
+$('replay').onclick = play;
+$('regen').onclick = () => { buildMesh(); play(); };
+$('toggle').onclick = () => $('panel').hidden = !$('panel').hidden;
+
+// The mobile address bar showing/hiding changes innerHeight but not the canvas's 100lvh height, so it's ignored.
+let resizeTimer;
+addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (innerWidth === W && canvas.clientHeight === H) return;
+    resize(); animStart = -Infinity; ensureLoop();
+  }, 150);
+});
+
+resize();
+play();
+// ---------- page content ----------
+const applyMotionClasses = () => {
+  const m = motionMode();
+  document.documentElement.classList.toggle('lite', m !== 'full');
+  document.documentElement.classList.toggle('no-motion', m === 'off');
+};
+$('motion').addEventListener('input', applyMotionClasses);
+applyMotionClasses();
+
+const chase = (v, target, dt, tau) => v + (target - v) * (1 - Math.exp(-dt / tau));
+
+// Boxes the background turns into crystal panels: each visible .facet, plus whichever row is hovered.
+const facets = [...document.querySelectorAll('.facet')];
+let hovered = null;
+function panelRects() {
+  const cell = +$('size').value, pad = cell * 0.2, out = [];
+  const box = (el, hot) => {
+    const r = el.getBoundingClientRect();
+    if (!r.width || r.bottom < -cell || r.top > H + cell) return; // zero width = in a hidden tab
+    const hx = r.width / 2 + pad, hy = r.height / 2 + pad;
+    out.push({ mx: r.left + r.width / 2, my: r.top + r.height / 2, hx, hy, rad: Math.min(cell * 1.6, hx, hy), band: cell * (hot ? 0.35 : 0.6), jit: cell * 0.4, hot });
+  };
+  for (const el of facets) if (el.classList.contains('in')) box(el, false);
+  if (hovered) box(hovered, true);
+  return out;
+}
+// 0..1: signed distance from the triangle's center to the panel's rounded rectangle, nudged per triangle so the
+// outline stays faceted without looking stamped, then eased across a soft band.
+function panelMembership(t, r) {
+  const qx = Math.abs(t.cx - r.mx) - r.hx + r.rad, qy = Math.abs(t.cy - r.my) - r.hy + r.rad;
+  const d = Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - r.rad + t.tone * r.jit;
+  const u = Math.max(0, Math.min(1, 0.5 - d / r.band));
+  return u * u * (3 - 2 * u);
+}
+addEventListener('scroll', ensureLoop, { passive: true });
+
+for (const row of document.querySelectorAll('.hoverable')) {
+  row.addEventListener('pointerenter', e => {
+    if (e.pointerType !== 'mouse') return;
+    hovered = row;
+    const r = row.getBoundingClientRect();
+    spawnRipple(r.left + r.width / 2, r.top + r.height / 2, true);
+    ensureLoop();
+  });
+  row.addEventListener('pointerleave', () => { if (hovered === row) { hovered = null; ensureLoop(); } });
+}
+
+// Fade content in as it enters the view; the hero waits for the background reveal to get going.
+const io = new IntersectionObserver(entries => {
+  for (const en of entries) {
+    if (!en.isIntersecting) continue;
+    const r = en.target.getBoundingClientRect();
+    const diag = (r.left + r.top) / (innerWidth + innerHeight); // same top-left -> bottom-right order as the mesh
+    const wait = scrollY < 10 && en.target.closest('.hero') ? 0.35 * +$('dur').value : 0;
+    en.target.style.transitionDelay = Math.round(wait + diag * 300) + 'ms';
+    en.target.style.setProperty('--wait', Math.round(wait) + 'ms'); // the shape art staggers its own triangles
+    en.target.classList.add('in');
+    // The stagger is only for the fade-in; left in place it would also delay later transitions like the theme's color fade.
+    const el = en.target, clear = e => {
+      if (e.target !== el || e.propertyName !== 'opacity') return;
+      el.style.transitionDelay = '';
+      el.removeEventListener('transitionend', clear);
+    };
+    el.addEventListener('transitionend', clear);
+    ensureLoop();
+    io.unobserve(en.target);
+  }
+}, { threshold: 0.15 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+// ---------- shape art ----------
+// Full motion (desktop): run the algorithm live in workers, so every visit grows a slightly different picture.
+// Lite/off (phones, reduced motion): play back a run saved with the same settings.
+// Each tab has its own pictures (ARTS); clicking cycles through them when there's more than one.
+// Hovering shows the original, either a GIF or a photo.
+// gif: happy_cat.gif (56 frames × 100ms) without its loop marker, so it plays once and holds the last frame.
+// endCache: frame 45 redrawn with the same settings, for the GIF to fade into once it stops.
+const ARTS = {
+  home: [{
+    label: 'A cat in a pink hat, drawn with triangles', src: 'art/happy_cat.png', cache: 'art/happy_cat.shapes.json',
+    gif: 'art/happy_cat_once.gif', gifMs: 5600, endCache: 'art/happy_cat_end.shapes.json',
+  }],
+  about: [
+    { label: 'A magnolia blossom, drawn with triangles', src: 'art/magnolia.webp', cache: 'art/magnolia.shapes.json', photo: 'art/magnolia.webp' },
+    { label: 'Painted paper lanterns, drawn with triangles', src: 'art/lanterns.webp', cache: 'art/lanterns.shapes.json', photo: 'art/lanterns.webp' },
+  ],
+};
+const ART = { maxShapes: 700, goal: 98, cands: 300, age: 100, alpha: 0.5, res: 256, showAt: 200 };
+const artCanvas = $('art'), actx = artCanvas.getContext('2d');
+document.body.classList.toggle('debug', new URLSearchParams(location.search).has('debug'));
+
+function sizeArt(w, h) {
+  const cssW = artCanvas.getBoundingClientRect().width, dpr = Math.min(devicePixelRatio || 1, 2);
+  artCanvas.style.height = Math.round(cssW * h / w) + 'px';
+  artCanvas.width = Math.round(cssW * dpr); artCanvas.height = Math.round(cssW * h / w * dpr);
+  const sc = artCanvas.width / w;
+  actx.setTransform(sc, 0, 0, sc, 0, 0);
+}
+function drawArtShape(p, color, alpha, cx = actx) {
+  cx.fillStyle = `rgba(${color},${alpha})`;
+  cx.beginPath(); cx.moveTo(p[0], p[1]); cx.lineTo(p[2], p[3]); cx.lineTo(p[4], p[5]); cx.closePath(); cx.fill();
+}
+const artCaption = (n, sim, done) => $('artCaption').textContent = `${n} triangles${sim == null ? '' : ` · ${sim.toFixed(1)}% match`}${done ? '' : '…'}`;
+
+// Shapes are drawn at a steady pace, whether they come from a live run or the saved one: a live run can
+// finish in about a second, too fast to see. Ease-out pacing lets the big early triangles land slowly.
+const ART_PLAY_MS = 3200;
+
+// Resolves once the art's frame has finished fading in, so no triangles land while it's still appearing.
+function artVisible() {
+  const fig = artCanvas.closest('figure');
+  return new Promise(res => {
+    if (motionMode() === 'off' || (fig.classList.contains('in') && getComputedStyle(fig).opacity === '1')) return res();
+    const onEnd = e => {
+      if (e.target !== fig || e.propertyName !== 'opacity' || !fig.classList.contains('in')) return;
+      fig.removeEventListener('transitionend', onEnd);
+      res();
+    };
+    fig.addEventListener('transitionend', onEnd);
+    setTimeout(res, 5000); // in case the transition never fires (e.g. the tab was in the background)
+  });
+}
+
+// The first ART.showAt triangles are drawn under the original picture; it then fades out (onShow) and the rest are paced.
+function paceArt(list, isDone, alpha, onEnd, { cx = actx, onShow = () => artBase.classList.remove('on'), cancelled = () => false } = {}) {
+  const instant = motionMode() === 'off', head = ART.showAt;
+  let drawn = 0, start = 0;
+  const step = now => {
+    if (cancelled()) return;
+    if (!start) {
+      if (list.length < head && !isDone()) return requestAnimationFrame(step);
+      for (; drawn < Math.min(head, list.length); drawn++) drawArtShape(list[drawn], list[drawn].slice(6), alpha, cx);
+      onShow();
+      start = now;
+    }
+    const u = instant ? 1 : Math.max(0, Math.min(1, (now - start) / ART_PLAY_MS));
+    const want = u >= 1 ? list.length : Math.min(list.length, head + Math.round((ART.maxShapes - head) * (1 - (1 - u) ** 2)));
+    for (; drawn < want; drawn++) drawArtShape(list[drawn], list[drawn].slice(6), alpha, cx);
+    if (isDone() && drawn >= list.length) return onEnd();
+    if (drawn) artCaption(drawn, null, false);
+    requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+async function runArtLive(a, cancelled) {
+  const img = new Image(); img.src = a.src; await img.decode();
+  if (cancelled()) return;
+  const s = Math.min(1, ART.res / Math.max(img.width, img.height));
+  const w = Math.max(1, Math.round(img.width * s)), h = Math.max(1, Math.round(img.height * s));
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const cx = c.getContext('2d', { willReadFrequently: true });
+  cx.drawImage(img, 0, 0, w, h);
+  const px = cx.getImageData(0, 0, w, h).data, target = new Float32Array(w * h * 3), sum = [0, 0, 0];
+  for (let i = 0, j = 0; i < px.length; i += 4, j += 3) for (let k = 0; k < 3; k++) { target[j + k] = px[i + k]; sum[k] += px[i + k]; }
+  const bg = sum.map(v => Math.round(v / (w * h)));
+  let total = 0;
+  for (let i = 0; i < target.length; i += 3) for (let k = 0; k < 3; k++) { const d = target[i + k] - bg[k]; total += d * d; }
+
+  sizeArt(w, h);
+  actx.fillStyle = `rgb(${bg})`; actx.fillRect(0, 0, w, h);
+  // Leave a core free for the background animation and the page itself.
+  const n = Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 4) - 1));
+  const url = URL.createObjectURL(new Blob([$('artWorker').textContent], { type: 'text/javascript' }));
+  const workers = Array.from({ length: n }, () => {
+    const wk = new Worker(url);
+    wk.postMessage({ type: 'init', w, h, alpha: ART.alpha, target, bg });
+    return wk;
+  });
+  const per = Math.ceil(ART.cands / n), shapes = [];
+  let sim = 0, finished = false;
+  const shown = artVisible().then(() => new Promise(res => paceArt(shapes, () => finished, ART.alpha, res, { cancelled })));
+  try {
+    while (shapes.length < ART.maxShapes && !cancelled()) {
+      const results = await Promise.all(workers.map(wk => new Promise(res => {
+        wk.onmessage = e => res(e.data);
+        wk.postMessage({ type: 'step', n: per, age: ART.age });
+      })));
+      const best = results.map(r => r.best).filter(Boolean).sort((a, b) => a.delta - b.delta)[0];
+      if (!best || best.delta >= 0) break;
+      workers.forEach(wk => wk.postMessage({ type: 'commit', pts: best.pts, color: best.color }));
+      total = Math.max(0, results[0].err + best.delta);
+      sim = 100 * (1 - Math.sqrt(total / target.length) / 255);
+      shapes.push([...best.pts, ...best.color]);
+      if (sim >= ART.goal) break;
+    }
+  } finally {
+    finished = true;
+    workers.forEach(wk => wk.terminate());
+    URL.revokeObjectURL(url);
+  }
+  if (cancelled()) return;
+  await shown;
+  artCaption(shapes.length, sim, true);
+}
+
+async function playArtCached(a, cancelled) {
+  const data = await (await fetch(a.cache)).json();
+  if (cancelled()) return;
+  sizeArt(data.w, data.h);
+  actx.fillStyle = `rgb(${data.bg})`; actx.fillRect(0, 0, data.w, data.h);
+  await artVisible();
+  await new Promise(res => paceArt(data.shapes, () => true, data.alpha, res, { cancelled }));
+  artCaption(data.shapes.length, data.sim, true);
+}
+
+// Hover (tap on touch screens) plays the original GIF once from its first frame, the one the triangles recreate,
+// then builds a triangle version of an earlier frame (ART.endCache) the same way the first picture was built:
+// hidden until 200 triangles, then paced up to the end. Every replay builds the same saved run.
+// Works while the first picture is still landing. The GIF is fetched on first hover, or once the triangles
+// finish, so it never competes with the page loading.
+// A photo (no GIF) simply fades in over its triangles while hovered.
+function loadArtAssets(a) {
+  return a.assets ??= a.gif
+    ? Promise.all([fetch(a.gif).then(r => r.blob()), fetch(a.endCache).then(r => r.json())])
+    : fetch(a.photo).then(r => r.blob()).then(b => [b, null]);
+}
+
+let art = null, artWant = null, artRun = 0, artBase = $('artBase2');
+function enableGif() {
+  if (motionMode() === 'off') return { stop() {} };
+  const frame = $('artFrame'), gif = $('artGif'), endCanvas = $('artEnd'), ecx = endCanvas.getContext('2d');
+  let playing = false, url = '', clearTimer = 0, endTimer = 0, build = 0, mainCaption = '';
+  const buildEnd = data => {
+    const id = ++build;
+    endCanvas.width = artCanvas.width; endCanvas.height = artCanvas.height;
+    const sc = endCanvas.width / data.w;
+    ecx.setTransform(sc, 0, 0, sc, 0, 0);
+    ecx.fillStyle = `rgb(${data.bg})`; ecx.fillRect(0, 0, data.w, data.h);
+    mainCaption = $('artCaption').textContent;
+    paceArt(data.shapes, () => true, data.alpha, () => artCaption(data.shapes.length, data.sim, true), {
+      cx: ecx, onShow: () => frame.classList.add('ended'), cancelled: () => id !== build,
+    });
+  };
+  const play = async () => {
+    if (!frame.classList.contains('shown')) return;
+    playing = true; clearTimeout(clearTimer); clearTimeout(endTimer);
+    const a = art, [blob, endData] = await loadArtAssets(a);
+    if (!playing || a !== art) return;
+    // A new URL every time, so the browser restarts the GIF rather than reusing a finished one.
+    if (url) URL.revokeObjectURL(url);
+    gif.src = url = URL.createObjectURL(blob);
+    await gif.decode().catch(() => {});
+    if (!playing) return;
+    frame.classList.add('playing');
+    if (endData) endTimer = setTimeout(() => buildEnd(endData), a.gifMs);
+  };
+  const stop = () => {
+    playing = false; clearTimeout(endTimer);
+    if (mainCaption) { $('artCaption').textContent = mainCaption; mainCaption = ''; }
+    build++;
+    frame.classList.remove('playing', 'ended');
+    clearTimer = setTimeout(() => { if (!playing) gif.removeAttribute('src'); }, 900); // after the fade-out
+  };
+  frame.classList.add('ready');
+  frame.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') play(); });
+  frame.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') stop(); });
+  frame.addEventListener('click', () => { if (!artCycles() && matchMedia('(hover: none)').matches) playing ? stop() : play(); });
+  return { stop };
+}
+
+const artLive = motionMode() === 'full' && typeof Worker !== 'undefined', artHover = enableGif();
+const artIdx = { home: 0, about: 0 };
+let artView = 'home';
+const artCycles = () => ARTS[artView].length > 1;
+function showArt(view, auto = false) { artView = view; return buildArt(ARTS[view][artIdx[view]], auto); }
+function nextArt(auto = false) {
+  artIdx[artView] = (artIdx[artView] + 1) % ARTS[artView].length;
+  showArt(artView, auto);
+}
+$('artFrame').addEventListener('click', () => { if (artCycles()) nextArt(); });
+// Pictures also move on by themselves ART_ROTATE_MS after one finishes building, but not while hovered or the tab is hidden.
+const ART_ROTATE_MS = 10000;
+let rotateTimer = 0;
+function armRotate() {
+  clearTimeout(rotateTimer);
+  if (!artCycles() || motionMode() === 'off') return;
+  rotateTimer = setTimeout(() => document.hidden || $('artFrame').matches(':hover') ? armRotate() : nextArt(true), ART_ROTATE_MS);
+}
+
+// Switching pictures cross-fades the new original in over the current one (two base images take turns on top),
+// then its triangles build underneath; a build still running is dropped.
+// Auto-rotation skips the original: a still of the current triangles covers the new build until its first
+// ART.showAt triangles are down, so it fades straight from one triangle picture to the next.
+async function buildArt(a, auto = false) {
+  const frame = $('artFrame');
+  if (a === artWant) return;
+  artWant = a;
+  const id = ++artRun, cancelled = () => id !== artRun;
+  artHover.stop();
+  clearTimeout(rotateTimer);
+  const prev = artBase, base = artBase = prev === $('artBase') ? $('artBase2') : $('artBase');
+  base.src = auto ? artCanvas.toDataURL() : a.photo || a.src;
+  await base.decode().catch(() => {});
+  if (cancelled()) return;
+  art = a;
+  frame.classList.toggle('cycle', artCycles());
+  frame.title = artCycles() ? 'click for another picture' : '';
+  artCanvas.setAttribute('aria-label', a.label);
+  $('artCaption').textContent = '';
+  prev.style.zIndex = 1; base.style.zIndex = 2;
+  if (auto) {
+    base.style.transition = 'none';
+    base.classList.add('on');
+    base.offsetWidth; // apply the instant change before restoring the fade
+    base.style.transition = '';
+  } else {
+    base.classList.add('on');
+    if (frame.classList.contains('shown') && motionMode() !== 'off') {
+      await new Promise(r => setTimeout(r, 600));
+      if (cancelled()) return;
+    }
+  }
+  prev.classList.remove('on');
+  if (!auto) sizeArt(base.naturalWidth || 1, base.naturalHeight || 1);
+  frame.classList.add('shown');
+  try {
+    await (artLive ? runArtLive(a, cancelled).catch(() => cancelled() || playArtCached(a, cancelled)) : playArtCached(a, cancelled));
+    if (!cancelled() && motionMode() !== 'off') loadArtAssets(a);
+  } catch { $('artCaption').textContent = ''; }
+  if (!cancelled()) armRotate();
+}
+// Tabs: #about shows the about view, anything else shows home. The header and background stay put;
+// the newly shown content fades in again and the crystal panels re-form around it.
+function route() {
+  const view = location.hash === '#about' ? 'about' : 'home';
+  for (const v of ['home', 'about']) {
+    const el = $(v + '-view'), show = v === view;
+    if (el.hidden === !show) continue;
+    el.hidden = !show;
+    if (show) el.querySelectorAll('.reveal').forEach(r => { r.classList.remove('in'); r.style.transitionDelay = '0ms'; io.observe(r); });
+  }
+  document.querySelectorAll('#nav [data-view]').forEach(a => a.classList.toggle('active', a.dataset.view === view));
+  showArt(view);
+  hovered = null;
+  ensureLoop();
+}
+document.querySelector('#nav [data-view="home"]').addEventListener('click', e => {
+  e.preventDefault();
+  history.pushState(null, '', location.pathname + location.search);
+  route();
+});
+addEventListener('hashchange', route);
+addEventListener('popstate', route);
+route();
+
+// Dark mode: glide the gradient to a deep palette (and back). Saved, and defaults to the OS preference.
+// Light is the original palette mixed 40% toward white, pale enough for dark text.
+const PALETTES = { light: ['#a4bbfe', '#d4c5fb', '#b89df7'], dark: ['#1d2b6e', '#3a2878', '#2a1552'] };
+// Drawn as line icons: the sun character renders as a color emoji on many systems.
+const THEME_ICONS = {
+  dark: '<svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>',
+  light: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>',
+};
+const THEME_LOOK = { light: { shade: 50, sheen: 20 }, dark: { shade: 100, sheen: 5 } };
+let theme = localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+let themeAnim = 0;
+function setTheme(next, animate = true) {
+  theme = next;
+  document.documentElement.dataset.theme = theme;
+  localStorage.setItem('theme', theme);
+  $('theme').innerHTML = THEME_ICONS[theme === 'dark' ? 'light' : 'dark'];
+  for (const [id, v] of Object.entries(THEME_LOOK[theme])) { $(id).value = v; $(id + 'V').textContent = v + '%'; }
+  const from = ['c1', 'c2', 'c3'].map(id => hexToRgb($(id).value)), to = PALETTES[theme].map(hexToRgb);
+  const hex = c => '#' + c.map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+  const start = performance.now(), len = animate && motionMode() !== 'off' ? 600 : 0;
+  cancelAnimationFrame(themeAnim);
+  const step = now => {
+    const u = len ? Math.min(1, (now - start) / len) : 1, e = u * u * (3 - 2 * u);
+    ['c1', 'c2', 'c3'].forEach((id, i) => $(id).value = hex(from[i].map((v, k) => v + (to[i][k] - v) * e)));
+    colorMesh(); ensureLoop();
+    if (u < 1) themeAnim = requestAnimationFrame(step);
+  };
+  step(start);
+}
+// "~N months" since a start date, so the about text doesn't go stale.
+for (const el of document.querySelectorAll('[data-since]')) {
+  const [y, m] = el.dataset.since.split('-').map(Number), now = new Date();
+  const months = Math.max(1, (now.getFullYear() - y) * 12 + now.getMonth() + 1 - m);
+  const years = Math.floor(months / 12);
+  el.textContent = years ? `~${years} year${years > 1 ? 's' : ''}` : `~${months} month${months > 1 ? 's' : ''}`;
+}
+
+// Email: copy the address and confirm with a toast rather than opening a mail app. The clipboard API needs a
+// secure context (https or localhost), so fall back to a hidden textarea, and to mailto if copying fails entirely.
+let toastTimer = 0;
+function showToast(text) {
+  const t = $('toast');
+  t.textContent = text;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+async function copyText(text) {
+  if (window.isSecureContext && navigator.clipboard) {
+    try { await navigator.clipboard.writeText(text); return true; } catch {}
+  }
+  return copyTextFallback(text);
+}
+// Runs synchronously so it still counts as part of the click (copying is only allowed during a user action).
+function copyTextFallback(text) {
+  // Phones scroll to a focused field, and iOS zooms into one with text under 16px, so pin it in place,
+  // keep it read-only (no keyboard), and put the scroll position back afterwards.
+  const x = scrollX, y = scrollY;
+  const ta = Object.assign(document.createElement('textarea'), { value: text, readOnly: true });
+  ta.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;padding:0;border:0;opacity:0;font-size:16px';
+  document.body.appendChild(ta);
+  ta.focus({ preventScroll: true });
+  ta.setSelectionRange(0, text.length);
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch {}
+  ta.remove();
+  scrollTo(x, y);
+  return ok;
+}
+$('emailLink').addEventListener('click', async e => {
+  e.preventDefault();
+  const address = e.currentTarget.href.replace('mailto:', '');
+  if (await copyText(address)) showToast(`email copied · ${address}`);
+  else location.href = e.currentTarget.href;
+});
+
+const markScrolled = () => $('nav').classList.toggle('scrolled', scrollY > 20);
+addEventListener('scroll', markScrolled, { passive: true });
+markScrolled();
+$('theme').onclick = () => setTheme(theme === 'dark' ? 'light' : 'dark');
+setTheme(theme, false);
+</script>
+<div id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

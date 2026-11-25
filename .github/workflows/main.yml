@@ -1,32 +1,24 @@
-name: Build and Deploy
+name: Deploy
 
 on:
   workflow_dispatch:
   push:
     branches:
       - main
+  pull_request:
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
+      # The site is plain static files in site/, so there's nothing to build.
+      # Pushes to main go to production; pull requests get a preview URL for their branch.
       - name: Deploy
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=personal-website
+          command: pages deploy site --project-name=personal-website --branch=${{ github.head_ref || github.ref_name }}

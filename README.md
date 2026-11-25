@@ -1,36 +1,9 @@
-# personal-website
+# personal website
 
-## [jeffreychen.work](https://jeffreychen.work)
+[jeffreychen.work](https://jeffreychen.work)
 
-A responsive, themeable personal website built with **Vue 3**, **TypeScript**, and **Tailwind CSS**. Includes project showcases, resume, and a fun snow animation toggle. Designed to be minimal, interactive, and easy to expand.
+v2: an animated delaunay triangle background, crystal panels, and geometrized art, in plain html, css and javascript with no build step. everything lives in `site/`; open `site/index.html` through any static server to run it locally.
 
-## Features
+v1, the vue + tailwind version, is on the [`v1`](https://github.com/wovensoul/personal-website/tree/v1) branch and tagged [`v1.0.0`](https://github.com/wovensoul/personal-website/releases/tag/v1.0.0).
 
-- Dark/light mode styling via CSS variables
-- Toggleable snow animation ❄️
-- Project and experience sections
-- Resume download + contact info
-
-## Project Setup
-
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Type-Check, Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
+pushes to `main` deploy to cloudflare pages; pull requests get a preview deployment.
