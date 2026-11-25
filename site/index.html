@@ -61,8 +61,8 @@
   .no-motion .shimmer, .no-motion .shimmer::after { animation: none; }
   .no-motion .shimmer::after { display: none; }
   .links { display: flex; gap: 22px; }
-  .links a, .row .actions a { text-decoration: none; opacity: .8; transition: opacity .2s; }
-  .links a:hover, .row .actions a:hover { opacity: 1; }
+  .links a, .row .actions a, .row .org { text-decoration: none; opacity: .8; transition: opacity .2s; }
+  .links a:hover, .row .actions a:hover, .row .org:hover { opacity: 1; }
 
   /* Content sits directly on the mesh; the triangles behind each .facet deepen into a crystal panel (drawn in the canvas). */
   section { padding-top: 56px; }
@@ -114,6 +114,7 @@
   .reveal.in { opacity: 1; translate: 0 0; }
   .no-motion .reveal { opacity: 1; translate: none; transition: none; }
   #toggle { position: fixed; right: 16px; bottom: 16px; background: rgba(30, 20, 70, .55); }
+  body:not(.debug) #toggle, body:not(.debug) #panel { display: none; }
   #panel select { font: inherit; font-size: 12px; padding: 3px; border-radius: 6px; background: rgba(255, 255, 255, .12); color: #fff; border: 1px solid rgba(255, 255, 255, .3); }
   #panel option { color: #000; }
   #panel { position: fixed; right: 16px; bottom: 60px; width: 260px; padding: 14px 16px; border-radius: 12px; background: rgba(20, 16, 40, .82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: grid; gap: 10px; font-size: 13px; }
@@ -149,52 +150,12 @@
   <div id="home-view">
   <section id="experience">
     <h2 class="reveal">experience</h2>
-    <div class="facet reveal">
-      <div class="row hoverable"><div><b>swe</b> @ garner health</div><span class="when">feb 2026 – present</span></div>
-      <div class="row hoverable"><div><b>swe</b> @ pupil</div><span class="when">oct 2023 – may 2024</span></div>
-      <div class="row hoverable"><div><b>it</b> @ nyu</div><span class="when">feb 2022 – may 2024</span></div>
-    </div>
+    <div class="facet reveal"></div>
   </section>
 
   <section id="projects">
     <h2 class="reveal">projects</h2>
-    <div class="facet reveal">
-      <article class="row hoverable">
-        <h3>personal website</h3>
-        <p>you are here! rebuilt around delaunay triangulation and geometrized art</p>
-        <div class="tags">html · css · javascript · canvas · claude · cursor</div>
-        <div class="actions"><a href="https://github.com/wovensoul/personal-website" target="_blank" rel="noopener">repo</a></div>
-      </article>
-      <article class="row hoverable">
-        <h3>sales insights agent</h3>
-        <p>multi-agent for data analytics and forecasts</p>
-        <div class="tags">python · google adk · vertex ai · bigquery · bqml</div>
-        <div class="actions"><a href="https://github.com/wovensoul/sales-insights-agent" target="_blank" rel="noopener">repo</a></div>
-      </article>
-      <article class="row hoverable">
-        <h3>sales analytics</h3>
-        <p>rest api to manage and analyze sales</p>
-        <div class="tags">java · spring boot · spring jpa · hibernate · maven</div>
-        <div class="actions"><a href="https://github.com/wovensoul/sales-analytics" target="_blank" rel="noopener">repo</a></div>
-      </article>
-      <article class="row hoverable">
-        <h3>matcha generator</h3>
-        <p>an ai-powered web app that generates matcha recipes</p>
-        <div class="tags">next.js · react · tsx · docker</div>
-        <div class="actions"><a href="https://matcha-generator.vercel.app" target="_blank" rel="noopener">demo</a><a href="https://github.com/wovensoul/matcha-generator" target="_blank" rel="noopener">repo</a></div>
-      </article>
-      <article class="row hoverable">
-        <h3>matchaluv</h3>
-        <p>a matcha centric social media app</p>
-        <div class="tags">flutter · firebase</div>
-        <div class="actions"><a href="https://github.com/wovensoul/matchaluv" target="_blank" rel="noopener">repo</a></div>
-      </article>
-      <article class="row hoverable">
-        <h3>personal blog</h3>
-        <p>a blog implementing headless cms with automatic builds and deploys</p>
-        <div class="tags">vue · strapi · render</div>
-      </article>
-    </div>
+    <div class="facet reveal"></div>
   </section>
   </div>
 
@@ -211,6 +172,8 @@
   </section>
   </div>
 </main>
+<script src="content.js"></script>
+<script src="components.js"></script>
 
 <button id="toggle">Settings</button>
 <div id="panel" hidden>
@@ -756,20 +719,9 @@ document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 // ---------- shape art ----------
 // Full motion (desktop): run the algorithm live in workers, so every visit grows a slightly different picture.
 // Lite/off (phones, reduced motion): play back a run saved with the same settings.
-// Each tab has its own pictures (ARTS); clicking cycles through them when there's more than one.
+// Each tab has its own pictures (SITE.art in content.js); clicking cycles through them when there's more than one.
 // Hovering shows the original, either a GIF or a photo.
-// gif: happy_cat.gif (56 frames × 100ms) without its loop marker, so it plays once and holds the last frame.
-// endCache: frame 45 redrawn with the same settings, for the GIF to fade into once it stops.
-const ARTS = {
-  home: [{
-    label: 'A cat in a pink hat, drawn with triangles', src: 'art/happy_cat.png', cache: 'art/happy_cat.shapes.json',
-    gif: 'art/happy_cat_once.gif', gifMs: 5600, endCache: 'art/happy_cat_end.shapes.json',
-  }],
-  about: [
-    { label: 'A magnolia blossom, drawn with triangles', src: 'art/magnolia.webp', cache: 'art/magnolia.shapes.json', photo: 'art/magnolia.webp' },
-    { label: 'Painted paper lanterns, drawn with triangles', src: 'art/lanterns.webp', cache: 'art/lanterns.shapes.json', photo: 'art/lanterns.webp' },
-  ],
-};
+const ARTS = SITE.art;
 const ART = { maxShapes: 700, goal: 98, cands: 300, age: 100, alpha: 0.5, res: 256, showAt: 200 };
 const artCanvas = $('art'), actx = artCanvas.getContext('2d');
 document.body.classList.toggle('debug', new URLSearchParams(location.search).has('debug'));
