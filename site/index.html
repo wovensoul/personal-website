@@ -67,7 +67,7 @@
 
   /* Content sits directly on the mesh; the triangles behind each .facet deepen into a crystal panel (drawn in the canvas). */
   section { padding-top: 56px; }
-  h2 { font-weight: 400; font-size: 14px; letter-spacing: .2em; margin: 0 0 18px; opacity: .85; }
+  h2 { font-weight: 700; text-transform: uppercase; font-size: 14px; letter-spacing: .2em; margin: 0 0 18px; opacity: .85; }
   .facet { padding: 26px 32px; }
   .facet.reveal { transition: opacity .7s ease-out, translate .7s ease-out, color .6s, text-shadow .6s; }
   /* Light mode with frosted panels: text on the panels goes deep indigo; the header and headings stay white. */
@@ -98,6 +98,7 @@
   .prose p { margin: 0 0 14px; line-height: 1.7; opacity: .92; }
   .prose p:last-child { margin-bottom: 0; }
   .row .actions { grid-row: 1; grid-column: 2; display: flex; gap: 14px; font-size: 14px; }
+  .row .actions a { opacity: 1; }
 
   /* Links to the site's other pages, plus the dark mode toggle. */
   #nav { position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: flex-end; align-items: center; gap: 26px; padding: 22px 32px; font-size: 14px; letter-spacing: .08em; text-shadow: var(--shadow); z-index: 1; }
@@ -150,19 +151,19 @@
 
   <div id="home-view">
   <section id="experience">
-    <h2 class="reveal">experience</h2>
+    <h2 class="reveal">Experience</h2>
     <div class="facet reveal"></div>
   </section>
 
   <section id="projects">
-    <h2 class="reveal">projects</h2>
+    <h2 class="reveal">Projects</h2>
     <div class="facet reveal"></div>
   </section>
   </div>
 
   <div id="about-view" hidden>
   <section>
-    <h2 class="reveal">about</h2>
+    <h2 class="reveal">About</h2>
     <div class="facet prose reveal">
       <p>hello! my name is jeffrey but you can call me jeff! i’ve been a software engineer at Garner Health for <span data-since="2026-02">~9 months</span>, where we help people find better care. i’ve had the awesome opportunity to contribute to our mission from a few different angles, from building member-facing features to the internal tools and infra that keep our business ops running.</p>
       <p>i’m soaking up as much as i can and getting exposure all across the company, and i’ve even started conducting interviews for entry-level candidates! between the work itself and some amazing mentorship, i’ve picked up (and really internalized) good agentic coding hygiene and workflows that keep accelerating my learning and growth as an engineer.</p>
@@ -524,7 +525,7 @@ function rippleAt(x, y, now) {
 const GLOW_RISE = 60, GLOW_FALL = 240;
 let lastFrame = 0;
 
-// lift: the triangle sits behind content and deepens into a crystal panel. hot: that content is hovered.
+// lift: the triangle sits behind content and deepens into a crystal panel. hot: -1..1, the hover/stripe accent.
 function drawTriangle(t, progress, k = 0, lift = 0, hot = 0) {
   const e = easeOut(progress), s = (0.55 + 0.45 * e) * (1 - 0.3 * k);
   const [a, b, c] = t.pts;
@@ -547,13 +548,19 @@ function drawTriangle(t, progress, k = 0, lift = 0, hot = 0) {
   }
   if (lift > 0.005) {
     // Both themes frost the panel lighter: pale glass behind dark text in light mode, a soft lilac haze in dark mode.
-    // Per-facet variation keeps it crystalline.
-    const dark = theme === 'dark';
-    ctx.globalAlpha = Math.max(0, reveal * lift * (dark ? 0.1 + 0.14 * hot + t.tone * 0.05 : 0.42 + 0.14 * hot + t.tone * 0.14));
+    // Per-facet variation keeps it crystalline. A positive hot is the theme's accent: dark panels light up,
+    // light ones tint darker (more white barely shows on pale glass). A negative hot does the opposite.
+    const dark = theme === 'dark', up = Math.max(0, dark ? hot : -hot), down = Math.max(0, dark ? -hot : hot);
+    ctx.globalAlpha = Math.max(0, reveal * lift * (dark ? 0.1 + 0.14 * up + t.tone * 0.05 : 0.42 + 0.2 * up + t.tone * 0.14));
     ctx.fillStyle = dark ? '#d8ccff' : '#ffffff';
     ctx.fill();
+    if (down > 0.005) {
+      ctx.globalAlpha = reveal * lift * down * (dark ? 0.2 : 0.05);
+      ctx.fillStyle = dark ? '#120a30' : '#4a4560';
+      ctx.fill();
+    }
   }
-  const edge = Math.min(1, edgeAlpha + 0.35 * k + 0.3 * lift + 0.35 * hot);
+  const edge = Math.min(1, edgeAlpha + 0.35 * k + 0.3 * lift + 0.35 * Math.abs(hot));
   if (edge) {
     ctx.globalAlpha = 1;
     ctx.strokeStyle = `rgba(255,255,255,${edge * e})`;
@@ -582,12 +589,15 @@ function render(now) {
     const p = Math.max(0, Math.min(1, (elapsed - t.wave * (1 - FADE)) / FADE));
     if (p < 1) done = false;
     // Panels: how far inside each content box (as a rounded rectangle) the triangle sits, softened at the border.
-    let liftT = 0, hotT = 0;
+    let liftT = 0, stripeT = 0, hoverT = 0;
     for (const r of panels) {
       const v = panelMembership(t, r);
       liftT = Math.max(liftT, v);
-      if (r.hot) hotT = Math.max(hotT, v * r.hot);
+      if (r.kind === 'stripe') stripeT = Math.max(stripeT, v * STRIPE);
+      else if (r.kind === 'hover') hoverT = Math.max(hoverT, v);
     }
+    const hotT = theme === 'dark' ? Math.max(stripeT, hoverT)
+      : hoveredStripe ? stripeT * (1 - hoverT) - hoverT * STRIPE_FLIP : Math.max(stripeT, hoverT * LIGHT_HOVER);
     t.lift = chase(t.lift || 0, liftT, dt, 140); t.hot = chase(t.hot || 0, hotT, dt, 90);
     if (Math.abs(t.lift - liftT) > 0.002 || Math.abs(t.hot - hotT) > 0.002) lifting = true;
     if (p > 0) drawTriangle(t, p, t.glow, t.lift, t.hot);
@@ -660,20 +670,24 @@ const chase = (v, target, dt, tau) => v + (target - v) * (1 - Math.exp(-dt / tau
 
 // Boxes the background turns into crystal panels: each visible .facet, plus whichever row is hovered.
 // Every other project is lit a little (STRIPE of the hover glow) so the long list doesn't sit flat.
+// In light mode, hovering a tinted project flips it the other way (STRIPE_FLIP), so it still responds,
+// and hovering anything else only tints it lightly (LIGHT_HOVER) to keep the text easy to read.
 const facets = [...document.querySelectorAll('.facet')];
-const stripes = [...document.querySelectorAll('#projects .row')].filter((_, i) => i % 2 === 0), STRIPE = 0.8;
-let hovered = null;
+const stripes = [...document.querySelectorAll('#projects .row')].filter((_, i) => i % 2 === 0);
+const STRIPE = 0.8, STRIPE_FLIP = 0.3, LIGHT_HOVER = 0.5;
+let hovered = null, hoveredStripe = false;
 function panelRects() {
   const cell = +$('size').value, pad = cell * 0.2, out = [];
-  const box = (el, hot) => {
+  hoveredStripe = stripes.includes(hovered);
+  const box = (el, kind) => {
     const r = el.getBoundingClientRect();
     if (!r.width || r.bottom < -cell || r.top > H + cell) return; // zero width = in a hidden tab
     const hx = r.width / 2 + pad, hy = r.height / 2 + pad;
-    out.push({ mx: r.left + r.width / 2, my: r.top + r.height / 2, hx, hy, rad: Math.min(cell * 1.6, hx, hy), band: cell * (hot ? 0.35 : 0.6), jit: cell * 0.4, hot });
+    out.push({ mx: r.left + r.width / 2, my: r.top + r.height / 2, hx, hy, rad: Math.min(cell * 1.6, hx, hy), band: cell * (kind ? 0.35 : 0.6), jit: cell * 0.4, kind });
   };
-  for (const el of facets) if (el.classList.contains('in')) box(el, 0);
-  for (const el of stripes) if (el !== hovered && el.closest('.facet').classList.contains('in')) box(el, STRIPE);
-  if (hovered) box(hovered, 1);
+  for (const el of facets) if (el.classList.contains('in')) box(el, '');
+  for (const el of stripes) if (el.closest('.facet').classList.contains('in')) box(el, 'stripe');
+  if (hovered) box(hovered, 'hover');
   return out;
 }
 // 0..1: signed distance from the triangle's center to the panel's rounded rectangle, nudged per triangle so the
@@ -1026,7 +1040,6 @@ let themeAnim = 0;
 function setTheme(next, animate = true) {
   theme = next;
   document.documentElement.dataset.theme = theme;
-  localStorage.setItem('theme', theme);
   $('theme').innerHTML = THEME_ICONS[theme === 'dark' ? 'light' : 'dark'];
   for (const [id, v] of Object.entries(THEME_LOOK[theme])) { $(id).value = v; $(id + 'V').textContent = v + '%'; }
   const from = ['c1', 'c2', 'c3'].map(id => hexToRgb($(id).value)), to = PALETTES[theme].map(hexToRgb);
@@ -1091,7 +1104,10 @@ $('emailLink').addEventListener('click', async e => {
 const markScrolled = () => $('nav').classList.toggle('scrolled', scrollY > 20);
 addEventListener('scroll', markScrolled, { passive: true });
 markScrolled();
-$('theme').onclick = () => setTheme(theme === 'dark' ? 'light' : 'dark');
+// Follows the system theme until the toggle is used; then the choice is remembered.
+const systemDark = matchMedia('(prefers-color-scheme: dark)');
+systemDark.addEventListener('change', e => { if (!localStorage.getItem('theme')) setTheme(e.matches ? 'dark' : 'light'); });
+$('theme').onclick = () => { setTheme(theme === 'dark' ? 'light' : 'dark'); localStorage.setItem('theme', theme); };
 setTheme(theme, false);
 </script>
 <div id="toast" role="status" aria-live="polite"></div>
