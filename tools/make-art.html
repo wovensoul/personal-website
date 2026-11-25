@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>make art</title>
+<style>
+  body { font: 14px system-ui, sans-serif; max-width: 760px; margin: 40px auto; padding: 0 20px; color: #222; }
+  form { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; }
+  label { display: flex; gap: 6px; align-items: center; }
+  .out { display: flex; gap: 20px; margin-top: 24px; }
+  canvas { width: 256px; height: 256px; border-radius: 12px; background: #eee; }
+  #status { margin-top: 12px; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<h1>make art</h1>
+<p>Turns a photo into a square picture plus a saved triangle run for <code>site/art/</code>. Uses the site's own triangle code and settings.</p>
+<form id="form">
+  <label>Photo <input type="file" id="file" accept="image/*" required></label>
+  <label>Keep
+    <select id="crop"><option value="0.5">middle</option><option value="0">top</option><option value="1">bottom</option></select>
+  </label>
+  <label>Name <input id="name" placeholder="magnolia" required pattern="[a-z0-9_\-]+"></label>
+  <button>Make</button>
+</form>
+<div class="out"><canvas id="photo" width="256" height="256"></canvas><canvas id="tri" width="256" height="256"></canvas></div>
+<div id="status"></div>
+<script>
+const $ = id => document.getElementById(id);
+const SIZE = 640, RES = 256;
+
+async function siteSettings() {
+  const html = await (await fetch('../site/index.html')).text();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const m = html.match(/const ART = (\{[^;]+\});/);
+  return { worker: doc.getElementById('artWorker').textContent, ART: Function(`return ${m[1]}`)() };
+}
+
+function squareCrop(img, keep) {
+  const s = Math.min(img.width, img.height), c = document.createElement('canvas');
+  c.width = c.height = SIZE;
+  c.getContext('2d').drawImage(img, (img.width - s) * keep, (img.height - s) * keep, s, s, 0, 0, SIZE, SIZE);
+  return c;
+}
+
+function save(blob, filename) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+$('form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const name = $('name').value, { worker, ART } = await siteSettings();
+  const img = await createImageBitmap($('file').files[0]);
+  const webp = await new Promise(r => squareCrop(img, +$('crop').value).toBlob(r, 'image/webp', 0.88));
+
+  // Same path as the site: decode the saved picture and shrink it to the working size.
+  const pic = await createImageBitmap(webp), pcx = $('photo').getContext('2d', { willReadFrequently: true });
+  pcx.drawImage(pic, 0, 0, RES, RES);
+  const px = pcx.getImageData(0, 0, RES, RES).data, target = new Float32Array(RES * RES * 3), sum = [0, 0, 0];
+  for (let i = 0, j = 0; i < px.length; i += 4, j += 3) for (let k = 0; k < 3; k++) { target[j + k] = px[i + k]; sum[k] += px[i + k]; }
+  const bg = sum.map(v => Math.round(v / (RES * RES)));
+  let total = 0;
+  for (let i = 0; i < target.length; i += 3) for (let k = 0; k < 3; k++) { const d = target[i + k] - bg[k]; total += d * d; }
+
+  const tcx = $('tri').getContext('2d');
+  tcx.fillStyle = `rgb(${bg})`; tcx.fillRect(0, 0, RES, RES);
+  const wk = new Worker(URL.createObjectURL(new Blob([worker], { type: 'text/javascript' })));
+  const call = msg => new Promise(r => { wk.onmessage = e => r(e.data); wk.postMessage(msg); });
+  wk.postMessage({ type: 'init', w: RES, h: RES, alpha: ART.alpha, target, bg });
+  const shapes = [];
+  let sim = 0;
+  while (shapes.length < ART.maxShapes && sim < ART.goal) {
+    const { best, err } = await call({ type: 'step', n: ART.cands, age: ART.age });
+    if (!best || best.delta >= 0) break;
+    wk.postMessage({ type: 'commit', pts: best.pts, color: best.color });
+    total = Math.max(0, err + best.delta);
+    sim = 100 * (1 - Math.sqrt(total / target.length) / 255);
+    shapes.push([...best.pts.map(v => +v.toFixed(1)), ...best.color]);
+    const p = best.pts;
+    tcx.fillStyle = `rgba(${best.color},${ART.alpha})`;
+    tcx.beginPath(); tcx.moveTo(p[0], p[1]); tcx.lineTo(p[2], p[3]); tcx.lineTo(p[4], p[5]); tcx.closePath(); tcx.fill();
+    $('status').textContent = `${shapes.length} triangles · ${sim.toFixed(1)}% match`;
+  }
+  wk.terminate();
+  save(webp, `${name}.webp`);
+  save(new Blob([JSON.stringify({ w: RES, h: RES, bg, alpha: ART.alpha, sim: +sim.toFixed(2), shapes })], { type: 'application/json' }), `${name}.shapes.json`);
+  $('status').textContent += ` · saved ${name}.webp and ${name}.shapes.json`;
+});
+</script>
+</body>
+</html>
