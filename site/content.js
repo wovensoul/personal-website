@@ -15,6 +15,18 @@ window.SITE = {
       links: { repo: 'https://github.com/wovensoul/personal-website' },
     },
     {
+      name: 'facets',
+      about: 'turns photos into triangles, one shape at a time',
+      tags: ['javascript', 'canvas', 'web workers'],
+      links: { demo: 'https://facets.jeffreychen.work', repo: 'https://github.com/wovensoul/lab/tree/main/facets' },
+    },
+    {
+      name: 'automata',
+      about: 'game of life, its variants, and 1d rules in the browser',
+      tags: ['javascript', 'canvas'],
+      links: { demo: 'https://automata.jeffreychen.work', repo: 'https://github.com/wovensoul/lab/tree/main/automata' },
+    },
+    {
       name: 'sales insights agent',
       about: 'multi-agent for data analytics and forecasts',
       tags: ['python', 'google adk', 'vertex ai', 'bigquery', 'bqml'],
