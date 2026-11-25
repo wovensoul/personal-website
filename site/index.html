@@ -26,7 +26,7 @@
   .art { display: block; width: clamp(170px, 26vw, 250px); }
   /* The original picture shows until enough triangles have landed, then fades into them.
      Hovering plays the original GIF over the triangles once, then fades into triangles of its last frame. */
-  .art-base, .art-gif, .art-end { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .35s ease-out; pointer-events: none; }
+  .art-base, .art-gif, .art-end { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity .35s ease-out; pointer-events: none; }
   .art-end { transition-duration: .5s; }
   .art-base { transition-duration: .6s; }
   .art-gif, .art-end { z-index: 3; }
@@ -586,7 +586,7 @@ function render(now) {
     for (const r of panels) {
       const v = panelMembership(t, r);
       liftT = Math.max(liftT, v);
-      if (r.hot) hotT = Math.max(hotT, v);
+      if (r.hot) hotT = Math.max(hotT, v * r.hot);
     }
     t.lift = chase(t.lift || 0, liftT, dt, 140); t.hot = chase(t.hot || 0, hotT, dt, 90);
     if (Math.abs(t.lift - liftT) > 0.002 || Math.abs(t.hot - hotT) > 0.002) lifting = true;
@@ -659,7 +659,9 @@ applyMotionClasses();
 const chase = (v, target, dt, tau) => v + (target - v) * (1 - Math.exp(-dt / tau));
 
 // Boxes the background turns into crystal panels: each visible .facet, plus whichever row is hovered.
+// Every other project is lit a little (STRIPE of the hover glow) so the long list doesn't sit flat.
 const facets = [...document.querySelectorAll('.facet')];
+const stripes = [...document.querySelectorAll('#projects .row')].filter((_, i) => i % 2 === 0), STRIPE = 0.8;
 let hovered = null;
 function panelRects() {
   const cell = +$('size').value, pad = cell * 0.2, out = [];
@@ -669,8 +671,9 @@ function panelRects() {
     const hx = r.width / 2 + pad, hy = r.height / 2 + pad;
     out.push({ mx: r.left + r.width / 2, my: r.top + r.height / 2, hx, hy, rad: Math.min(cell * 1.6, hx, hy), band: cell * (hot ? 0.35 : 0.6), jit: cell * 0.4, hot });
   };
-  for (const el of facets) if (el.classList.contains('in')) box(el, false);
-  if (hovered) box(hovered, true);
+  for (const el of facets) if (el.classList.contains('in')) box(el, 0);
+  for (const el of stripes) if (el !== hovered && el.closest('.facet').classList.contains('in')) box(el, STRIPE);
+  if (hovered) box(hovered, 1);
   return out;
 }
 // 0..1: signed distance from the triangle's center to the panel's rounded rectangle, nudged per triangle so the
@@ -694,13 +697,14 @@ for (const row of document.querySelectorAll('.hoverable')) {
   row.addEventListener('pointerleave', () => { if (hovered === row) { hovered = null; ensureLoop(); } });
 }
 
-// Fade content in as it enters the view; the hero waits for the background reveal to get going.
+// Fade content in as it enters the view. While the background is still revealing, everything waits for the
+// same moment (35% of the way in) and then follows the mesh's top-left -> bottom-right order.
 const io = new IntersectionObserver(entries => {
   for (const en of entries) {
     if (!en.isIntersecting) continue;
     const r = en.target.getBoundingClientRect();
     const diag = (r.left + r.top) / (innerWidth + innerHeight); // same top-left -> bottom-right order as the mesh
-    const wait = scrollY < 10 && en.target.closest('.hero') ? 0.35 * +$('dur').value : 0;
+    const wait = Math.max(0, animStart + 0.35 * +$('dur').value - performance.now());
     en.target.style.transitionDelay = Math.round(wait + diag * 300) + 'ms';
     en.target.style.setProperty('--wait', Math.round(wait) + 'ms'); // the shape art staggers its own triangles
     en.target.classList.add('in');
@@ -714,7 +718,7 @@ const io = new IntersectionObserver(entries => {
     ensureLoop();
     io.unobserve(en.target);
   }
-}, { threshold: 0.15 });
+}, { rootMargin: '0px 0px -60px 0px' }); // a fixed margin, not a ratio: a ratio of a tall list would wait for a lot of it
 document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
 // ---------- shape art ----------
@@ -727,12 +731,38 @@ const ART = { maxShapes: 700, goal: 98, cands: 300, age: 100, alpha: 0.5, res: 2
 const artCanvas = $('art'), actx = artCanvas.getContext('2d');
 document.body.classList.toggle('debug', new URLSearchParams(location.search).has('debug'));
 
-function sizeArt(w, h) {
+// The frame is always square so switching pictures never moves the header. A picture that isn't square
+// is centered, and the bands around it are filled with the average color of its edges (artPad).
+let artPad = 'transparent';
+function sizeArt() {
   const cssW = artCanvas.getBoundingClientRect().width, dpr = Math.min(devicePixelRatio || 1, 2);
-  artCanvas.style.height = Math.round(cssW * h / w) + 'px';
-  artCanvas.width = Math.round(cssW * dpr); artCanvas.height = Math.round(cssW * h / w * dpr);
-  const sc = artCanvas.width / w;
-  actx.setTransform(sc, 0, 0, sc, 0, 0);
+  artCanvas.style.height = Math.round(cssW) + 'px';
+  artCanvas.width = artCanvas.height = Math.round(cssW * dpr);
+}
+// Fills cx's canvas with the padding, then maps a w×h picture into its centered square and fills that with bg.
+function fitArt(cx, w, h, bg) {
+  const c = cx.canvas, sc = c.width / Math.max(w, h);
+  cx.setTransform(1, 0, 0, 1, 0, 0);
+  cx.fillStyle = artPad; cx.fillRect(0, 0, c.width, c.height);
+  cx.setTransform(sc, 0, 0, sc, (c.width - w * sc) / 2, (c.height - h * sc) / 2);
+  cx.fillStyle = `rgb(${bg})`; cx.fillRect(0, 0, w, h);
+}
+function edgeColor(a) {
+  return a.pad ??= (async () => {
+    const img = new Image(); img.src = a.photo || a.src; await img.decode();
+    const n = 32, c = document.createElement('canvas'); c.width = c.height = n;
+    const cx = c.getContext('2d', { willReadFrequently: true });
+    cx.drawImage(img, 0, 0, n, n);
+    const px = cx.getImageData(0, 0, n, n).data, sum = [0, 0, 0];
+    let count = 0;
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      if (x && y && x < n - 1 && y < n - 1) continue;
+      const i = (y * n + x) * 4;
+      for (let k = 0; k < 3; k++) sum[k] += px[i + k];
+      count++;
+    }
+    return `rgb(${sum.map(v => Math.round(v / count))})`;
+  })().catch(() => 'transparent');
 }
 function drawArtShape(p, color, alpha, cx = actx) {
   cx.fillStyle = `rgba(${color},${alpha})`;
@@ -795,8 +825,8 @@ async function runArtLive(a, cancelled) {
   let total = 0;
   for (let i = 0; i < target.length; i += 3) for (let k = 0; k < 3; k++) { const d = target[i + k] - bg[k]; total += d * d; }
 
-  sizeArt(w, h);
-  actx.fillStyle = `rgb(${bg})`; actx.fillRect(0, 0, w, h);
+  sizeArt();
+  fitArt(actx, w, h, bg);
   // Leave a core free for the background animation and the page itself.
   const n = Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 4) - 1));
   const url = URL.createObjectURL(new Blob([$('artWorker').textContent], { type: 'text/javascript' }));
@@ -835,8 +865,8 @@ async function runArtLive(a, cancelled) {
 async function playArtCached(a, cancelled) {
   const data = await (await fetch(a.cache)).json();
   if (cancelled()) return;
-  sizeArt(data.w, data.h);
-  actx.fillStyle = `rgb(${data.bg})`; actx.fillRect(0, 0, data.w, data.h);
+  sizeArt();
+  fitArt(actx, data.w, data.h, data.bg);
   await artVisible();
   await new Promise(res => paceArt(data.shapes, () => true, data.alpha, res, { cancelled }));
   artCaption(data.shapes.length, data.sim, true);
@@ -862,9 +892,7 @@ function enableGif() {
   const buildEnd = data => {
     const id = ++build;
     endCanvas.width = artCanvas.width; endCanvas.height = artCanvas.height;
-    const sc = endCanvas.width / data.w;
-    ecx.setTransform(sc, 0, 0, sc, 0, 0);
-    ecx.fillStyle = `rgb(${data.bg})`; ecx.fillRect(0, 0, data.w, data.h);
+    fitArt(ecx, data.w, data.h, data.bg);
     mainCaption = $('artCaption').textContent;
     paceArt(data.shapes, () => true, data.alpha, () => artCaption(data.shapes.length, data.sim, true), {
       cx: ecx, onShow: () => frame.classList.add('ended'), cancelled: () => id !== build,
@@ -929,9 +957,11 @@ async function buildArt(a, auto = false) {
   clearTimeout(rotateTimer);
   const prev = artBase, base = artBase = prev === $('artBase') ? $('artBase2') : $('artBase');
   base.src = auto ? artCanvas.toDataURL() : a.photo || a.src;
-  await base.decode().catch(() => {});
+  const [pad] = await Promise.all([edgeColor(a), base.decode().catch(() => {})]);
   if (cancelled()) return;
-  art = a;
+  art = a; artPad = pad;
+  base.style.backgroundColor = auto ? '' : pad;
+  $('artGif').style.backgroundColor = pad;
   frame.classList.toggle('cycle', artCycles());
   frame.title = artCycles() ? 'click for another picture' : '';
   artCanvas.setAttribute('aria-label', a.label);
@@ -950,7 +980,7 @@ async function buildArt(a, auto = false) {
     }
   }
   prev.classList.remove('on');
-  if (!auto) sizeArt(base.naturalWidth || 1, base.naturalHeight || 1);
+  if (!auto) sizeArt();
   frame.classList.add('shown');
   try {
     await (artLive ? runArtLive(a, cancelled).catch(() => cancelled() || playArtCached(a, cancelled)) : playArtCached(a, cancelled));
