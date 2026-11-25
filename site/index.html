@@ -697,13 +697,14 @@ for (const row of document.querySelectorAll('.hoverable')) {
   row.addEventListener('pointerleave', () => { if (hovered === row) { hovered = null; ensureLoop(); } });
 }
 
-// Fade content in as it enters the view; the hero waits for the background reveal to get going.
+// Fade content in as it enters the view. While the background is still revealing, everything waits for the
+// same moment (35% of the way in) and then follows the mesh's top-left -> bottom-right order.
 const io = new IntersectionObserver(entries => {
   for (const en of entries) {
     if (!en.isIntersecting) continue;
     const r = en.target.getBoundingClientRect();
     const diag = (r.left + r.top) / (innerWidth + innerHeight); // same top-left -> bottom-right order as the mesh
-    const wait = scrollY < 10 && en.target.closest('.hero') ? 0.35 * +$('dur').value : 0;
+    const wait = Math.max(0, animStart + 0.35 * +$('dur').value - performance.now());
     en.target.style.transitionDelay = Math.round(wait + diag * 300) + 'ms';
     en.target.style.setProperty('--wait', Math.round(wait) + 'ms'); // the shape art staggers its own triangles
     en.target.classList.add('in');
@@ -717,7 +718,7 @@ const io = new IntersectionObserver(entries => {
     ensureLoop();
     io.unobserve(en.target);
   }
-}, { threshold: 0.15 });
+}, { rootMargin: '0px 0px -60px 0px' }); // a fixed margin, not a ratio: a ratio of a tall list would wait for a lot of it
 document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
 // ---------- shape art ----------
