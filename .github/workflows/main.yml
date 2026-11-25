@@ -14,7 +14,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # The site is plain static files in site/, so there's nothing to build.
+      # pdflatex, the same engine Overleaf uses by default.
+      - name: Build resume
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: main.tex
+          working_directory: resume
+
+      - name: Add resume to site
+        run: cp resume/main.pdf site/resume.pdf
+
+      # The rest of the site is plain static files in site/.
       # Pushes to main go to production; pull requests get a preview URL for their branch.
       - name: Deploy
         uses: cloudflare/wrangler-action@v3

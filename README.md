@@ -24,8 +24,9 @@ then open <http://localhost:8126/site/>. add `?debug` to the url to show the set
 | `site/content.js` | everything listed on the site: experience, projects, and art |
 | `site/components.js` | the building blocks that turn `content.js` into markup |
 | `site/art/` | pictures and their saved triangle runs |
-| `site/resume.pdf` | linked from the nav |
+| `resume/` | the resume's latex source, mirrored from overleaf |
 | `tools/make-art.html` | turns a photo into a new art entry (not deployed) |
+| `tools/resume.ps1` | moves the resume between overleaf and the repo, and builds it locally |
 
 ## adding things
 
@@ -74,6 +75,28 @@ the cat on the home tab is a gif instead of a photo, so it uses `gif` (a copy of
 `components.js` has `h(tag, attrs, ...children)` for making elements, `ExternalLink(text, href)`, `ExperienceRow`, `ProjectRow`, and `renderList(selector, items, component)`. a new kind of list is a new component plus one `renderList` call. any row with the `hoverable` class lights up its crystal panel on hover.
 
 the about text is prose, so it's written straight into `site/index.html` (`#about-view`) rather than kept in `content.js`.
+
+## resume
+
+overleaf is the main copy; `resume/` mirrors it. each deploy compiles `resume/main.tex` with pdflatex (overleaf's default) and serves it as `/resume.pdf`, so the site always has the version in the repo.
+
+run these from the repo root. windows may block scripts by default, hence the `-ExecutionPolicy Bypass`:
+
+```sh
+powershell -ExecutionPolicy Bypass -File tools/resume.ps1 <command>
+```
+
+| command | what it does |
+| --- | --- |
+| `pull <zip or folder>` | replaces `resume/` with an overleaf download (menu → download → source) |
+| `export [name]` | zips `resume/` into Downloads, named `jeffrey-chen-resume-MM-YY` unless you give a name |
+| `build` | compiles to `site/resume.pdf` with [tectonic](https://tectonic-typesetting.github.io) for a local preview |
+
+**overleaf → repo:** download the source zip, run `pull` on it, then commit and push.
+
+**repo → overleaf:** run `export`, then in overleaf use new project → upload project and pick the zip. it becomes a new project named after the zip, like the other dated versions.
+
+tectonic uses xetex rather than pdflatex, so a local build can differ slightly from overleaf and the deployed pdf. check page breaks in overleaf before relying on them.
 
 ## deploys
 
