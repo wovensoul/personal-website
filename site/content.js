@@ -10,7 +10,7 @@ window.SITE = {
   projects: [
     {
       name: 'personal website',
-      about: 'a portfolio built on delaunay triangulation and geometrized art',
+      about: 'you are here',
       tags: ['html', 'css', 'javascript', 'canvas', 'claude', 'cursor'],
       links: { repo: 'https://github.com/wovensoul/personal-website' },
     },
