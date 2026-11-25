@@ -555,7 +555,7 @@ function drawTriangle(t, progress, k = 0, lift = 0, hot = 0) {
     ctx.fillStyle = dark ? '#d8ccff' : '#ffffff';
     ctx.fill();
     if (down > 0.005) {
-      ctx.globalAlpha = reveal * lift * down * (dark ? 0.2 : 0.05);
+      ctx.globalAlpha = reveal * lift * down * (dark ? 0.2 : 0.08);
       ctx.fillStyle = dark ? '#120a30' : '#4a4560';
       ctx.fill();
     }
@@ -668,13 +668,14 @@ applyMotionClasses();
 
 const chase = (v, target, dt, tau) => v + (target - v) * (1 - Math.exp(-dt / tau));
 
-// Boxes the background turns into crystal panels: each visible .facet, plus whichever row is hovered.
+// Boxes the background turns into crystal panels. A facet with rows is drawn as those rows (so scrolling a
+// long list like projects moves the frost through the viewport); a facet without rows is one panel.
 // Every other project is lit a little (STRIPE of the hover glow) so the long list doesn't sit flat.
-// In light mode, hovering a tinted project flips it the other way (STRIPE_FLIP), so it still responds,
-// and hovering anything else only tints it lightly (LIGHT_HOVER) to keep the text easy to read.
+// In light mode, hovering a tinted project flips it the other way (STRIPE_FLIP), so it still responds;
+// hovering an unlit one darkens it (LIGHT_HOVER). Dark mode just lights either up.
 const facets = [...document.querySelectorAll('.facet')];
 const stripes = [...document.querySelectorAll('#projects .row')].filter((_, i) => i % 2 === 0);
-const STRIPE = 0.8, STRIPE_FLIP = 0.3, LIGHT_HOVER = 0.5;
+const STRIPE = 0.8, STRIPE_FLIP = 0.3, LIGHT_HOVER = 1;
 let hovered = null, hoveredStripe = false;
 function panelRects() {
   const cell = +$('size').value, pad = cell * 0.2, out = [];
@@ -685,8 +686,12 @@ function panelRects() {
     const hx = r.width / 2 + pad, hy = r.height / 2 + pad;
     out.push({ mx: r.left + r.width / 2, my: r.top + r.height / 2, hx, hy, rad: Math.min(cell * 1.6, hx, hy), band: cell * (kind ? 0.35 : 0.6), jit: cell * 0.4, kind });
   };
-  for (const el of facets) if (el.classList.contains('in')) box(el, '');
-  for (const el of stripes) if (el.closest('.facet').classList.contains('in')) box(el, 'stripe');
+  for (const el of facets) {
+    if (!el.classList.contains('in')) continue;
+    const rows = el.querySelectorAll('.row');
+    if (rows.length) for (const row of rows) box(row, stripes.includes(row) ? 'stripe' : '');
+    else box(el, '');
+  }
   if (hovered) box(hovered, 'hover');
   return out;
 }
